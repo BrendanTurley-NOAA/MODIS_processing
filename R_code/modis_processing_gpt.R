@@ -5,6 +5,8 @@
 library(ncdf4)
 library(rgdal)
 
+source('~/Documents/R/Github/MODIS_processing/R_code/l2_flag_check.R')
+
 ### load shapfiles for plotting
 setwd("~/Desktop/professional/biblioteca/data/shapefiles/ne_10m_admin_0_countries")
 world <- readOGR('ne_10m_admin_0_countries.shp')
@@ -37,24 +39,38 @@ lat_1 <- ncvar_get(reproj1, 'lat')
 lon_1 <- ncvar_get(reproj1, 'lon')
 nc_close(reproj1)
 
-flags <- l2_flag_check(flags_1)
+lonbox_e <- -81.5 ### Florida Bay
+lonbox_w <- -87 ### mouth of Mississippi River
+latbox_n <- 30.5 ### northern coast
+latbox_s <- 24.3 ### southern edge of Ket West
 
-flags <- apply(flags_1,c(1,2),l2_flag_check)
+ind_x <- which(lon_1<lonbox_e & lon_1>lonbox_w)
+ind_y <- which(lat_1<latbox_n & lat_1>latbox_s)
+lon_ss <- lon_1[ind_x]
+lat_ss <- lat_1[ind_y]
+flag_ss <- flags_1[ind_x,ind_y]
+chl_ss <- chl_1[ind_x,ind_y]
 
-res <- vapply(flags_1,l2_flag_check,numeric(1))
-
-flags_v <- as.vector(flags_1)
-res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
+flags_v <- as.vector(flag_ss)
+# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
 flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
-flags_1.1 <- structure(flags_1.1, dim=dim(flags_1))
+flags_1.2 <- matrix(unlist(flags_1.1),nrow(flag_ss),ncol(flag_ss))
+flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flag_ss))
+flags_1.2[which(flags_1.2==F)] <- NA
+flags_1.2[which(flags_1.2==T)] <- 1
 
-test <- matrix(1:625,25,25)
 
-res <- vapply(test,function(x)x+1,numeric(1))
-res <- vapply(test,function(x)x<10,numeric(1))
-res <- structure(res,dim=dim(test))
+# flags_v <- as.vector(flags_1)
+# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
+# flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
+# flags_1.1 <- structure(flags_1.1, dim=dim(flags_1))
 
-png('test1.png',width=10,height=10,units='in',res=300)
+image(lon_ss,rev(lat_ss),log(chl_ss[,ncol(chl_ss):1],base=10),asp=1)
+# image(lon_ss,rev(lat_ss),flag_ss[,ncol(flag_ss):1],add=T)
+image(lon_ss,rev(lat_ss),flags_1.2[,ncol(flags_1.2):1],add=T,col='white',breaks=c(.5,10))
+plot(world,add=T)
+
+png('test_flag.png',width=10,height=10,units='in',res=300)
 image(lon_1,rev(lat_1),log(chl_1[,ncol(chl_1):1],base=10),asp=1)
 plot(world,add=T)
 grid()
