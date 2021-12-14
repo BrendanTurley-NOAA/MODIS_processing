@@ -10,14 +10,14 @@ url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A2
 modis <- nc_open(url)
 attributes(modis$var)
 chl_a <- ncvar_get(modis, 'chl_ocx')
-latm <- ncvar_get(modis, 'lat')
 lonm <- ncvar_get(modis, 'lon')
+latm <- ncvar_get(modis, 'lat')
 nc_close(modis)
 
-lonbox_e <- -81.5 ### Florida Bay
+lonbox_e <- -80.5 ### Florida Bay
 lonbox_w <- -87 ### mouth of Mississippi River
 latbox_n <- 30.5 ### northern coast
-latbox_s <- 24.3 ### southern edge of Ket West
+latbox_s <- 24.3 ### southern edge of Key West
 
 ind1 <- which(lonm<lonbox_e & lonm>lonbox_w)
 ind2 <- which(latm<latbox_n & latm>latbox_s)
@@ -46,3 +46,14 @@ setwd("~/Desktop/professional/projects/Postdoc_FL/hab_index")
   plot(world,add=T)
   dev.off()
 }
+
+
+modis <- nc_open(url)
+attributes(modis$var)
+chl_a <- ncvar_get(modis, 'chl_ocx',start=c(2233,1429),count=c(156,149))
+lonm <- ncvar_get(modis, 'lon',start=2233,count=156)
+latm <- ncvar_get(modis, 'lat',start=1429,count=149)
+nc_close(modis)
+
+image(lonm,rev(latm),chl_a[,ncol(chl_a):1],asp=1)
+plot(world,add=T)
