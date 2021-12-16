@@ -1,11 +1,19 @@
+library(lubridate)
 library(ncdf4)
 library(rgdal)
+
+### reference date and julian days
+dates <- data.frame(date=ymd(seq(as.Date('2021-01-01'),as.Date('2021-12-31'),'day')),
+           yday=yday(ymd(seq(as.Date('2021-01-01'),as.Date('2021-12-31'),'day'))))
+dates$yday[which(day(dates$date)==1)]
+dates$yday[which(day(dates$date)==1)-1]
+
 
 setwd("~/Desktop/professional/biblioteca/data/shapefiles/ne_10m_admin_0_countries")
 world <- readOGR('ne_10m_admin_0_countries.shp')
 
-url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2003/001/A2003001.L3m_DAY_CHL_chl_ocx_4km.nc'
-url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A2021001.L3m_DAY_CHL_chl_ocx_4km.nc'
+### will use chlor_a not chl_ocx
+url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A2021001.L3m_DAY_CHL_chlor_a_4km.nc'
 
 modis <- nc_open(url)
 attributes(modis$var)
@@ -48,12 +56,23 @@ setwd("~/Desktop/professional/projects/Postdoc_FL/hab_index")
 }
 
 
-modis <- nc_open(url)
+url2 <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
+
+modis <- nc_open(url2)
 attributes(modis$var)
-chl_a <- ncvar_get(modis, 'chl_ocx',start=c(2233,1429),count=c(156,149))
-lonm <- ncvar_get(modis, 'lon',start=2233,count=156)
-latm <- ncvar_get(modis, 'lat',start=1429,count=149)
+chl_a <- ncvar_get(modis, 'chlor_a',start=c(2233,1429),count=c(156,149))
+lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
+lat2 <- ncvar_get(modis, 'lat',start=1429,count=149)
 nc_close(modis)
 
-image(lonm,rev(latm),chl_a[,ncol(chl_a):1],asp=1)
-plot(world,add=T)
+
+image(lon2,
+      rev(lat2),
+      log10(chl_a[,ncol(chl_a):1]),asp=1)
+
+
+### red band difference
+### Ruhul Amin, Jing Zhou, Alex Gilerson, Barry Gross, Fred Moshary, and Samir Ahmed, "Novel optical techniques for detecting and classifying toxic dinoflagellate Karenia brevis blooms using satellite imagery," Opt. Express 17, 9126-9144 (2009)
+# nLw678 - nLw667
+### Karenia brevis bloom index (KBBI)
+# (nLw678 - nLw667)/(nLw678 + nLw667)
