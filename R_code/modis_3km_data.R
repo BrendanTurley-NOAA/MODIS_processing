@@ -1,3 +1,5 @@
+### should I average Terra and Aqua together?
+
 library(lubridate)
 library(ncdf4)
 library(rgdal)
@@ -52,6 +54,7 @@ setwd("~/Desktop/professional/projects/Postdoc_FL/hab_index")
 
 
 url2 <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
+url2 <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODIST/L3SMI/2021/001/T20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
 
 modis <- nc_open(url2)
 attributes(modis$var)
@@ -60,6 +63,7 @@ lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
 lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
 nc_close(modis)
 
+hist(log10(chl_a))
 
 image(lon2,
       rev(lat2),
@@ -113,15 +117,20 @@ hist(nflh_mth)
 range(nflh_mth,na.rm=T)
 hist(log10(nflh_mth))
 range(log10(nflh_mth),na.rm=T)
-breaks <- quantile(nflh_mth,seq(0,1,.05),na.rm=T)
-col_fx <- colorRampPalette(c('khaki1','gold2','darkgoldenrod3','firebrick4'))
+lnflh <- log10(nflh_mth)
+lnflh[which(lnflh<(-2.5))] <- NA
+lnflh[which(lnflh>0)] <- NA
+breaks <- seq(-2.5,0,.2)
+# breaks <- quantile(nflh_mth,seq(0,1,.05),na.rm=T)
+col_fx <- colorRampPalette(c('lightyellow1','khaki2','darkgoldenrod3','firebrick4'))#,'tan4'))
 cols <- col_fx(length(breaks)-1)
 
 ### Hu/Chagaris method for red tide detection
 # nflh_mth[which(nflh_mth<0.02)] <- NA
 
 for(i in 1:12){
-  temp <- nflh_mth[i,,]
+  # temp <- nflh_mth[i,,]
+  temp <- lnflh[i,,]
   image(lon2,
         rev(lat2),
         temp[,ncol(temp):1],
