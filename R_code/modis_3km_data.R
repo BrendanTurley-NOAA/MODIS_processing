@@ -54,7 +54,6 @@ setwd("~/Desktop/professional/projects/Postdoc_FL/hab_index")
 
 
 url2 <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
-url2 <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODIST/L3SMI/2021/001/T20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
 
 modis <- nc_open(url2)
 attributes(modis$var)
