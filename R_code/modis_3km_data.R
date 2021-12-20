@@ -85,6 +85,7 @@ image(lon2,
       nflh[,ncol(nflh):1],asp=1)
 plot(world,add=T)
 
+
 ### reference date and julian days
 yr <- 2021
 last <- ifelse(leap_year(paste0(yr,'-01-01')),366,365)
@@ -108,28 +109,38 @@ for(i in 1:length(stop)){
                 '.L3m_MO_FLH_nflh_4km.nc')
   modis <- nc_open(url)
   nflh <- ncvar_get(modis, 'nflh',start=c(2233,1423),count=c(156,150))
+  lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
+  lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
   nc_close(modis)
   nflh_mth[i,,] <- nflh
 }
 
-hist(nflh_mth)
-range(nflh_mth,na.rm=T)
+### log
 hist(log10(nflh_mth))
 range(log10(nflh_mth),na.rm=T)
 lnflh <- log10(nflh_mth)
 lnflh[which(lnflh<(-2.5))] <- NA
 lnflh[which(lnflh>0)] <- NA
 breaks <- seq(-2.5,0,.2)
-# breaks <- quantile(nflh_mth,seq(0,1,.05),na.rm=T)
 col_fx <- colorRampPalette(c('lightyellow1','khaki2','darkgoldenrod3','firebrick4'))#,'tan4'))
 cols <- col_fx(length(breaks)-1)
-
+### linear
+hist(nflh_mth)
+range(nflh_mth,na.rm=T)
+nflh_mth[which(nflh_mth<0)] <- 0
+nflh_mth[which(nflh_mth>.5)] <-.5
+# breaks <- quantile(nflh_mth,seq(0,1,.05),na.rm=T)
+breaks <- seq(0,.5,.02)
+col_fx <- colorRampPalette(c('gray20','dodgerblue4','cadetblue3','lightskyblue1'))
+# col_fx <- colorRampPalette(c('gray20','tan4','indianred3','firebrick2','gold1'))
+cols <- col_fx(length(breaks)-1)
+cols[1] <- 1
 ### Hu/Chagaris method for red tide detection
 # nflh_mth[which(nflh_mth<0.02)] <- NA
 
 for(i in 1:12){
-  # temp <- nflh_mth[i,,]
-  temp <- lnflh[i,,]
+  temp <- nflh_mth[i,,]
+  # temp <- lnflh[i,,]
   image(lon2,
         rev(lat2),
         temp[,ncol(temp):1],
