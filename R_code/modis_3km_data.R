@@ -131,8 +131,8 @@ range(nflh_mth,na.rm=T)
 nflh_mth[which(nflh_mth<0)] <- 0
 nflh_mth[which(nflh_mth>.5)] <-.5
 breaks <- seq(0,.5,.02)
-# col_fx <- colorRampPalette(c('gray20','dodgerblue4','cadetblue3','lightskyblue1'))
-col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','firebrick2','gold1'))
+col_fx <- colorRampPalette(c('gray20','dodgerblue3','cadetblue2','lightsteelblue1'))
+# col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','firebrick2','gold1'))
 # col_fx <- colorRampPalette(c('gray20','tan4','indianred3','firebrick2','gold1'))
 cols <- col_fx(length(breaks)-1)
 cols[1] <- 1
@@ -148,6 +148,9 @@ for(i in 1:12){
         asp=1,breaks=breaks,col=cols)
   mtext(paste(yr,month.abb[i],sep='-'))
 }
+
+image(breaks,1:2,cbind(1:26,1:26),col=cols,xaxt='n')
+axis(1,breaks-.01,breaks,las=2)
 
 ### red band difference
 ### Ruhul Amin, Jing Zhou, Alex Gilerson, Barry Gross, Fred Moshary, and Samir Ahmed, "Novel optical techniques for detecting and classifying toxic dinoflagellate Karenia brevis blooms using satellite imagery," Opt. Express 17, 9126-9144 (2009)
