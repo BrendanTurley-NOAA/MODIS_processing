@@ -126,12 +126,13 @@ col_fx <- colorRampPalette(c('lightyellow1','khaki2','darkgoldenrod3','firebrick
 cols <- col_fx(length(breaks)-1)
 ### linear
 hist(nflh_mth)
+quantile(nflh_mth,seq(0,1,.05),na.rm=T)
 range(nflh_mth,na.rm=T)
 nflh_mth[which(nflh_mth<0)] <- 0
 nflh_mth[which(nflh_mth>.5)] <-.5
-# breaks <- quantile(nflh_mth,seq(0,1,.05),na.rm=T)
 breaks <- seq(0,.5,.02)
-col_fx <- colorRampPalette(c('gray20','dodgerblue4','cadetblue3','lightskyblue1'))
+# col_fx <- colorRampPalette(c('gray20','dodgerblue4','cadetblue3','lightskyblue1'))
+col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','firebrick2','gold1'))
 # col_fx <- colorRampPalette(c('gray20','tan4','indianred3','firebrick2','gold1'))
 cols <- col_fx(length(breaks)-1)
 cols[1] <- 1
