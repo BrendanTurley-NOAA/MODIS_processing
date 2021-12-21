@@ -100,6 +100,11 @@ dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,
                     yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
 start <- dates$yday[which(day(dates$date)==1)]
 stop <- c(dates$yday[which(day(dates$date)==1)-1],last)
+parm <- 'CHL_chlor_a'
+parm <- 'FLH_nflh'
+parm <- 'RRS_Rrs_667'
+parm <- 'RRS_Rrs_678'
+
 
 nflh_mth <- array(NA,c(12,156,150))
 for(i in 1:length(stop)){
@@ -112,7 +117,9 @@ for(i in 1:length(stop)){
                 sprintf("%03d",start[i]),
                 yr,
                 sprintf("%03d",stop[i]),
-                '.L3m_MO_FLH_nflh_4km.nc')
+                '.L3m_MO_',
+                parm,
+                '_4km.nc')
   modis <- nc_open(url)
   nflh <- ncvar_get(modis, 'nflh',start=c(2233,1423),count=c(156,150))
   lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
@@ -191,3 +198,88 @@ dev.off()
 # nLw678 - nLw667
 ### Karenia brevis bloom index (KBBI)
 # (nLw678 - nLw667)/(nLw678 + nLw667)
+# Rrs = nLw/F0
+# Rrs: sr^-1; nLw: mW cm^-2 um^-1 sr^-1; F0: mW cm^-2 um^-1
+sat_lll <- c(412,443,469,488,531,547,551,555,645,667,678,748,859,869,1240,1640,2130)
+F0 <- c(172.912,187.622,205.878,194.933,185.747,186.539,186.539,183.869,157.811,152.255,148.052,128.065,97.174,95.824,45.467,23.977,9.885)
+
+### reference date and julian days
+yr <- 2021
+last <- ifelse(leap_year(paste0(yr,'-01-01')),366,365)
+
+dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
+                    yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
+start <- dates$yday[which(day(dates$date)==1)]
+stop <- c(dates$yday[which(day(dates$date)==1)-1],last)
+parm1 <- 'RRS_Rrs_667'
+parm2 <- 'RRS_Rrs_678'
+
+i=9
+
+url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
+              yr,
+              '/',
+              sprintf("%03d",start[i]),
+              '/A',
+              yr,
+              sprintf("%03d",start[i]),
+              yr,
+              sprintf("%03d",stop[i]),
+              '.L3m_MO_',
+              parm1,
+              '_4km.nc')
+modis <- nc_open(url)
+rrs_667 <- ncvar_get(modis, 'Rrs_667',start=c(2233,1423),count=c(156,150))
+lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
+lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
+nc_close(modis)
+
+url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
+              yr,
+              '/',
+              sprintf("%03d",start[i]),
+              '/A',
+              yr,
+              sprintf("%03d",start[i]),
+              yr,
+              sprintf("%03d",stop[i]),
+              '.L3m_MO_',
+              parm2,
+              '_4km.nc')
+modis <- nc_open(url)
+rrs_678 <- ncvar_get(modis, 'Rrs_678',start=c(2233,1423),count=c(156,150))
+lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
+lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
+nc_close(modis)
+
+nlw_667 <- rrs_667*F0[which(sat_lll==667)]
+nlw_678 <- rrs_678*F0[which(sat_lll==678)]
+
+rbd <- nlw_678[,ncol(nlw_678):1] - nlw_667[,ncol(nlw_667):1]
+kbbi <- rbd/(nlw_678[,ncol(nlw_678):1] + nlw_667[,ncol(nlw_667):1])
+kbbi[which(kbbi<0)] <- NA
+kbbi[which(kbbi>1)] <- 1
+hist(rbd)
+hist(kbbi)
+
+threshold <- .15 # Amin 2009
+# threshold <- .1 # Hu, personal communication
+cutoff <- (threshold/1e4)*1e3
+
+imagePlot(lon2,
+          rev(lat2),
+          rbd,
+          asp=1)
+contour(lon2,
+        rev(lat2),
+        rbd,
+        levels=cutoff,col='purple',add=T)
+
+imagePlot(lon2,
+          rev(lat2),
+          kbbi,
+          asp=1)
+contour(lon2,
+        rev(lat2),
+        rbd,
+        levels=cutoff*.3,col='purple',add=T)
