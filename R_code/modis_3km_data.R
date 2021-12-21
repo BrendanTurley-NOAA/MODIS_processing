@@ -1,9 +1,15 @@
 ### should I average Terra and Aqua together?
-
+library(fields)
 library(lubridate)
 library(ncdf4)
 library(rgdal)
 
+setwd("~/Desktop/professional/biblioteca/data")
+bathy <- nc_open('etopo1.nc')
+topo <- ncvar_get(bathy, 'Band1')
+topo_lat <- ncvar_get(bathy, 'lat')
+topo_lon <- ncvar_get(bathy, 'lon')
+nc_close(bathy)
 
 setwd("~/Desktop/professional/biblioteca/data/shapefiles/ne_10m_admin_0_countries")
 world <- readOGR('ne_10m_admin_0_countries.shp')
@@ -131,26 +137,54 @@ range(nflh_mth,na.rm=T)
 nflh_mth[which(nflh_mth<0)] <- 0
 nflh_mth[which(nflh_mth>.5)] <-.5
 breaks <- seq(0,.5,.02)
-col_fx <- colorRampPalette(c('gray20','dodgerblue3','cadetblue2','lightsteelblue1'))
-# col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','firebrick2','gold1'))
+# col_fx <- colorRampPalette(c('gray20','dodgerblue3','cadetblue1'))
+col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','gold1'))
 # col_fx <- colorRampPalette(c('gray20','tan4','indianred3','firebrick2','gold1'))
 cols <- col_fx(length(breaks)-1)
-cols[1] <- 1
-### Hu/Chagaris method for red tide detection
-# nflh_mth[which(nflh_mth<0.02)] <- NA
 
-for(i in 1:12){
+### Hu/Chagaris method for red tide detection
+### .02 mW cm^-2 um^-1 sr^-1
+### NASA data W m^-2 um^-1 sr^-1
+### conversion
+cutoff <- (.02/1e3)*1e4
+
+setwd("~/Desktop/professional/projects/Postdoc_FL/figures")
+png("2021_habs_flh.png", height = 7, width = 7, units = 'in', res=300)
+par(mfrow=c(2,2),mar=c(4.5,4,2,2))
+for(i in 8:10){
   temp <- nflh_mth[i,,]
   # temp <- lnflh[i,,]
+  # imagePlot(lon2,
+  #           rev(lat2),
+  #           temp[,ncol(temp):1],
+  #           asp=1,breaks=breaks,col=cols,
+  #           xlab='Longitude',ylab='Latitude')
   image(lon2,
         rev(lat2),
         temp[,ncol(temp):1],
-        asp=1,breaks=breaks,col=cols)
+        asp=1,breaks=breaks,col=cols,
+        xlab='Longitude',ylab='Latitude')
+  contour(lon2,
+          rev(lat2),
+          temp[,ncol(temp):1],
+          level=cutoff,labels='',col='gray80',add=T)
   mtext(paste(yr,month.abb[i],sep='-'))
+  plot(world,add=T,col='gray80')
+  contour(topo_lon,
+          topo_lat,
+          topo,
+          add=T,levels=c(-100),col='white')
 }
+dev.off()
 
-image(breaks,1:2,cbind(1:26,1:26),col=cols,xaxt='n')
-axis(1,breaks-.01,breaks,las=2)
+setwd("~/Desktop/professional/projects/Postdoc_FL/figures")
+png("2021_habs_flh_cb.png", height = 5, width = 1.25, units = 'in', res=300)
+par(mar=c(1,1,1,4))
+image(1:2,breaks[2:26],rbind(1:25,1:25),col=cols,xaxt='n',yaxt='n',xlab='',ylab='')
+axis(4,breaks[seq(1,26,5)]+.01,breaks[seq(1,26,5)],las=2,cex.axis=1)
+mtext(expression(paste('W m'^-2, mu, 'm'^-1,'sr'^-1)),4,line=2.5,cex=1)
+### NASA data W m^-2 um^-1 sr^-1
+dev.off()
 
 ### red band difference
 ### Ruhul Amin, Jing Zhou, Alex Gilerson, Barry Gross, Fred Moshary, and Samir Ahmed, "Novel optical techniques for detecting and classifying toxic dinoflagellate Karenia brevis blooms using satellite imagery," Opt. Express 17, 9126-9144 (2009)
