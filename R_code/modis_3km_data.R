@@ -214,72 +214,93 @@ stop <- c(dates$yday[which(day(dates$date)==1)-1],last)
 parm1 <- 'RRS_Rrs_667'
 parm2 <- 'RRS_Rrs_678'
 
-i=9
 
-url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
-              yr,
-              '/',
-              sprintf("%03d",start[i]),
-              '/A',
-              yr,
-              sprintf("%03d",start[i]),
-              yr,
-              sprintf("%03d",stop[i]),
-              '.L3m_MO_',
-              parm1,
-              '_4km.nc')
-modis <- nc_open(url)
-rrs_667 <- ncvar_get(modis, 'Rrs_667',start=c(2233,1423),count=c(156,150))
-lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
-lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
-nc_close(modis)
+rbd_mth <- array(NA,c(12,156,150))
+kbbi_mth <- array(NA,c(12,156,150))
+for(i in 1:length(stop)){
+  url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
+                yr,
+                '/',
+                sprintf("%03d",start[i]),
+                '/A',
+                yr,
+                sprintf("%03d",start[i]),
+                yr,
+                sprintf("%03d",stop[i]),
+                '.L3m_MO_',
+                parm1,
+                '_4km.nc')
+  modis <- nc_open(url)
+  rrs_667 <- ncvar_get(modis, 'Rrs_667',start=c(2233,1423),count=c(156,150))
+  lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
+  lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
+  nc_close(modis)
+  
+  url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
+                yr,
+                '/',
+                sprintf("%03d",start[i]),
+                '/A',
+                yr,
+                sprintf("%03d",start[i]),
+                yr,
+                sprintf("%03d",stop[i]),
+                '.L3m_MO_',
+                parm2,
+                '_4km.nc')
+  modis <- nc_open(url)
+  rrs_678 <- ncvar_get(modis, 'Rrs_678',start=c(2233,1423),count=c(156,150))
+  nc_close(modis)
+  
+  nlw_667 <- rrs_667*F0[which(sat_lll==667)]
+  nlw_678 <- rrs_678*F0[which(sat_lll==678)]
+  
+  rbd <- nlw_678[,ncol(nlw_678):1] - nlw_667[,ncol(nlw_667):1]
+  kbbi <- rbd/(nlw_678[,ncol(nlw_678):1] + nlw_667[,ncol(nlw_667):1])
+  
+  rbd_mth[i,,] <- rbd
+  kbbi_mth[i,,] <- kbbi
+}
 
-url <- paste0('https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/',
-              yr,
-              '/',
-              sprintf("%03d",start[i]),
-              '/A',
-              yr,
-              sprintf("%03d",start[i]),
-              yr,
-              sprintf("%03d",stop[i]),
-              '.L3m_MO_',
-              parm2,
-              '_4km.nc')
-modis <- nc_open(url)
-rrs_678 <- ncvar_get(modis, 'Rrs_678',start=c(2233,1423),count=c(156,150))
-lon2 <- ncvar_get(modis, 'lon',start=2233,count=156)
-lat2 <- ncvar_get(modis, 'lat',start=1423,count=150)
-nc_close(modis)
+hist(rbd_mth)
+range(rbd_mth,na.rm=T)
+quantile(rbd_mth,seq(0,1,.1),na.rm=T)
+hist(kbbi_mth)
+range(kbbi_mth,na.rm=T)
 
-nlw_667 <- rrs_667*F0[which(sat_lll==667)]
-nlw_678 <- rrs_678*F0[which(sat_lll==678)]
-
-rbd <- nlw_678[,ncol(nlw_678):1] - nlw_667[,ncol(nlw_667):1]
-kbbi <- rbd/(nlw_678[,ncol(nlw_678):1] + nlw_667[,ncol(nlw_667):1])
-kbbi[which(kbbi<0)] <- NA
-kbbi[which(kbbi>1)] <- 1
-hist(rbd)
-hist(kbbi)
+rbd_orig <- rbd_mth
+rbd_mth[which(rbd_mth>.04)] <- .04
+rbd_mth[which(rbd_mth<0)] <- 0
+breaks <- seq(0,.04,.005)
+# col_fx <- colorRampPalette(c('gray20','dodgerblue3','cadetblue1'))
+col_fx <- colorRampPalette(c('gray20','dodgerblue4','indianred3','gold1'))
+# col_fx <- colorRampPalette(c('gray20','tan4','indianred3','firebrick2','gold1'))
+cols <- col_fx(length(breaks)-1)
 
 threshold <- .15 # Amin 2009
 # threshold <- .1 # Hu, personal communication
 cutoff <- (threshold/1e4)*1e3
 
-imagePlot(lon2,
+for(i in 1:12){
+  rbd_mth2 <- rbd_mth[i,,]
+  kbbi_mth2 <- kbbi_mth[i,,]
+  ind <- which(rbd_mth2>cutoff & kbbi_mth2>rbd_mth2*.3)
+  mask <- matrix(0,156,150)
+  mask[ind] <- 1
+  
+  imagePlot(lon2,
+            rev(lat2),
+            rbd_mth[i,,],
+            asp=1,col=cols,breaks=breaks)
+  contour(lon2,
           rev(lat2),
-          rbd,
-          asp=1)
-contour(lon2,
-        rev(lat2),
-        rbd,
-        levels=cutoff,col='purple',add=T)
+          mask,
+          levels=1,col='gray70',add=T)
+  # image(lon2,
+  #       rev(lat2),
+  #       mask,
+  #       breaks=c(-1,.5),col='white',add=T)
+  mtext(paste(yr,month.abb[i],sep='-'))
+  # plot(world,add=T,col='gray80')
+}
 
-imagePlot(lon2,
-          rev(lat2),
-          kbbi,
-          asp=1)
-contour(lon2,
-        rev(lat2),
-        rbd,
-        levels=cutoff*.3,col='purple',add=T)
