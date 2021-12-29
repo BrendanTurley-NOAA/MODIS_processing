@@ -101,6 +101,7 @@ dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,
 start <- dates$yday[which(day(dates$date)==1)]
 stop <- c(dates$yday[which(day(dates$date)==1)-1],last)
 parm <- 'CHL_chlor_a'
+parm <- 'POC_poc'
 parm <- 'FLH_nflh'
 parm <- 'RRS_Rrs_667'
 parm <- 'RRS_Rrs_678'
