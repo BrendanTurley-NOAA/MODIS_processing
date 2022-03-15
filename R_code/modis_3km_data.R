@@ -16,7 +16,7 @@ world <- readOGR('ne_10m_admin_0_countries.shp')
 
 ### will use chlor_a not chl_ocx
 url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A2021001.L3m_DAY_CHL_chlor_a_4km.nc'
-url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
+# url <- 'https://oceandata.sci.gsfc.nasa.gov:443/opendap/MODISA/L3SMI/2021/001/A20210012021031.L3m_MO_CHL_chlor_a_4km.nc'
 
 modis <- nc_open(url)
 attributes(modis$var)
