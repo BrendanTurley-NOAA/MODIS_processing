@@ -1,6 +1,7 @@
 library(lubridate)
 library(ncdf4)
 
+
 ### reference date and julian days
 yr <- 2021
 last <- ifelse(leap_year(paste0(yr,'-01-01')),366,365)
