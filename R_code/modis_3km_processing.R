@@ -1,6 +1,7 @@
 library(lubridate)
 library(ncdf4)
 library(raster)
+library(terra)
 
 ### reference date and julian days
 yr <- 2021
@@ -62,6 +63,9 @@ plot(r)
 r2 <- projectRaster(r,crs='+proj=utm +zone=17 +datum=NAD83 +units=km')
 crs(r2)
 plot(r2)
+### histogram stretch
+r3 <- stretch(r2,histeq=T)
+plot(r3)
 
 
 
