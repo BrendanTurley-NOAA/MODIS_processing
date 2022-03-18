@@ -45,7 +45,7 @@ system.time(
 image(log10(apply(chl_yday,c(2,3),mean,na.rm=T)),asp=1)
 
 
-### create inpyt structure
+### create input structure
 chl_1 <- list()
 chl_1$x <- lon2
 chl_1$y <- rev(lat2)
