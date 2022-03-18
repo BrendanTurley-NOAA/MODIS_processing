@@ -1,7 +1,19 @@
 library(lubridate)
 library(ncdf4)
 library(raster)
+library(rgdal)
 library(terra)
+
+### load map
+setwd("~/Desktop/professional/biblioteca/data/shapefiles/gshhg-shp-2.3.7/GSHHS_shp/h/")
+world <- readOGR('GSHHS_h_L1.shp')
+world <- crop(world, extent(-87, -79, 24, 31))
+w1 <- raster(ncol=400, nrow=400)
+extent(w1) <- extent(world)
+world_r <- rasterize(world,w1)
+plot(world_r)
+world_r2 <- projectRaster(world_r,crs='+proj=utm +zone=17 +datum=NAD83 +units=km')
+plot(world_r2)
 
 ### reference date and julian days
 yr <- 2021
