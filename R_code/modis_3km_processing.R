@@ -1,6 +1,6 @@
 library(lubridate)
 library(ncdf4)
-
+library(raster)
 
 ### reference date and julian days
 yr <- 2021
@@ -10,7 +10,7 @@ dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,
                     yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
 start <- dates$yday[which(day(dates$date)==1)]
 stop <- c(dates$yday[which(day(dates$date)==1)-1],last)
-index <- 1:365
+index <- 1
 parm <- 'CHL_chlor_a'
 # parm <- 'POC_poc'
 # parm <- 'FLH_nflh'
@@ -42,6 +42,27 @@ system.time(
 )
 
 image(log10(apply(chl_yday,c(2,3),mean,na.rm=T)),asp=1)
+
+
+### create inpyt structure
+chl_1 <- list()
+chl_1$x <- lon2
+chl_1$y <- rev(lat2)
+chl_1$z <- apply(chl_yday,c(2,3),mean,na.rm=T)
+# chl_1$z <- (chl_yday[,,dim(chl_yday)[3]:1])
+image(chl_1,asp=1)
+### create raster
+r <-raster(t(chl_1$z),
+           xmn=min(chl_1$x), xmx=max(chl_1$x),
+           ymn=min(chl_1$y), ymx=max(chl_1$y),
+           crs=CRS("+proj=longlat +datum=WGS84 +no_defs")
+)
+plot(r)
+### set CRS in kilometers
+r2 <- projectRaster(r,crs='+proj=utm +zone=17 +datum=NAD83 +units=km')
+crs(r2)
+plot(r2)
+
 
 
 chl_anom <- array(NA,c(length(75:365),length(lon2),length(lat2)))
