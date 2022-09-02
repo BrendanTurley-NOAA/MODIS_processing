@@ -78,7 +78,7 @@ dev.off()
 
 
 
-
+setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process')
 bathy <- nc_open('A2005217182500.L2_LAC_OC_reproject2.nc')
 attributes(bathy$var)
 chl <- ncvar_get(bathy, 'chlor_a')
