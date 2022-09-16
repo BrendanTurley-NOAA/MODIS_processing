@@ -47,6 +47,13 @@ cmd <- paste0('curl -b ',
               ' -o ',
               downloaded_file_path) # this directs and renames downloaded file
 
+cmd <- paste0('curl -b ',
+              cookie_path,
+              ' -c ',
+              cookie_path,
+              ' -L -n ',
+              manifest_file_name)
+
 t2.1 <- system.time(
   system(cmd) # calls command in Mac Terminal
 )
@@ -74,4 +81,20 @@ t3.1 <- system.time(
   system(cmd) # calls command in Mac Terminal
 )
 
+### downloading orders; not working
+setwd('/Users/Brendan/Documents/nasa/')
+manifest_file_name <- readLines('http_manifest.txt')
+# manifest_file_name <- 'http_manifest.txt'
+cmd <- paste0('wget',
+              ' --load-cookies ',
+              cookie_path,
+              ' --save-cookies ',
+              cookie_path ,
+              ' --keep-session-cookies ',
+              ' --auth-no-challenge=on --no-check-certificate --content-disposition -i ',
+              manifest_file_name)
 
+
+t4 <- system.time(
+  system(cmd) # calls command in Mac Terminal
+)
