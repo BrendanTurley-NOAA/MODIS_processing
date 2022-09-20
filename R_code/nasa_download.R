@@ -8,8 +8,8 @@ setwd('/Users/Brendan/Documents/nasa/cookies')
 appkey <- readLines('appkey.txt')
 
 #Set up your ~/.netrc file as listed here: https://wiki.earthdata.nasa.gov/display/EL/How+To+Access+Data+With+cURL+And+Wget
-netrc_path <- "/Users/Brendan/Documents/nasa/cookies/cookie.netrc"
-cookie_path <- "/Users/Brendan/Documents/nasa/cookies/cookie.urs_cookies"
+netrc_path <- "~/.netrc"
+cookie_path <- "~/.urs_cookies"
 
 ### example file to download
 url <- 'https://oceandata.sci.gsfc.nasa.gov/ob/getfile/AQUA_MODIS.20100109T000001.L2.OC.nc'
@@ -47,12 +47,12 @@ cmd <- paste0('curl -b ',
               ' -o ',
               downloaded_file_path) # this directs and renames downloaded file
 
-cmd <- paste0('curl -b ',
-              cookie_path,
-              ' -c ',
-              cookie_path,
-              ' -L -n ',
-              manifest_file_name)
+# cmd <- paste0('curl -b ',
+#               cookie_path,
+#               ' -c ',
+#               cookie_path,
+#               ' -L -n ',
+#               manifest_file_name)
 
 t2.1 <- system.time(
   system(cmd) # calls command in Mac Terminal
