@@ -81,7 +81,7 @@ t3.1 <- system.time(
   system(cmd) # calls command in Mac Terminal
 )
 
-### downloading orders; not working
+### downloading orders
 setwd('/Users/Brendan/Documents/nasa/')
 manifest_file_name <- readLines('http_manifest.txt')
 manifest_file_name <- 'http_manifest.txt'
