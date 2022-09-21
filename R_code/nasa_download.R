@@ -84,7 +84,7 @@ t3.1 <- system.time(
 ### downloading orders; not working
 setwd('/Users/Brendan/Documents/nasa/')
 manifest_file_name <- readLines('http_manifest.txt')
-# manifest_file_name <- 'http_manifest.txt'
+manifest_file_name <- 'http_manifest.txt'
 cmd <- paste0('wget',
               ' --load-cookies ',
               cookie_path,
@@ -98,3 +98,4 @@ cmd <- paste0('wget',
 t4 <- system.time(
   system(cmd) # calls command in Mac Terminal
 )
+ 
