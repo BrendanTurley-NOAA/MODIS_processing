@@ -100,3 +100,8 @@ t4 <- system.time(
   system(cmd) # calls command in Mac Terminal
 )
  
+### renaming code
+files <- list.files()
+ind_tar <- grep('.tar',files)
+untar(files[ind_tar])
+ 
