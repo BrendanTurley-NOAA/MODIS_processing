@@ -92,7 +92,8 @@ cmd <- paste0('wget',
               cookie_path ,
               ' --keep-session-cookies ',
               ' --auth-no-challenge=on --no-check-certificate --content-disposition -i ',
-              manifest_file_name)
+              manifest_file_name,
+              ' -q --show-progress --progress=bar:force 2>&1')
 
 
 t4 <- system.time(
