@@ -67,10 +67,8 @@ t2.1 <- system.time(
 
 ###---------------- 3) wget method -------
 setwd('/Users/Brendan/Documents/nasa/download_test/')
-# downloaded_file_path <- "/Users/Brendan/Documents/nasa/download_test/test"
-downloaded_file_path <- "/Users/Brendan/Documents/nasa/download_test/test/test3.nc4"
-cmd <- paste0('wget ‐‐directory-prefix=',
-              downloaded_file_path,
+downloaded_file <- "/Users/Brendan/Documents/nasa/download_test/test/test3.nc4"
+cmd <- paste0('wget ',
               ' --load-cookies ',
               cookie_path,
               ' --save-cookies ',
@@ -80,7 +78,7 @@ cmd <- paste0('wget ‐‐directory-prefix=',
               '?appkey=',
               appkey,
               ' -O ',
-              downloaded_file_path, # this directs and renames downloaded file
+              downloaded_file, # this directs and renames downloaded file
               ' -q --show-progress --progress=bar:force 2>&1')
 
 t3.1 <- system.time(
