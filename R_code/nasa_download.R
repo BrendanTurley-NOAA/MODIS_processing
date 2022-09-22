@@ -101,7 +101,17 @@ t4 <- system.time(
 )
  
 ### renaming code
-files <- list.files()
-ind_tar <- grep('.tar',files)
+setwd('/Users/Brendan/Documents/nasa/')
+files <- list.files() # get list of files
+ind_tar <- grep('.tar',files) # which is the tar file downloaded? assumes one tar file
 untar(files[ind_tar])
- 
+
+setwd(paste0('/Users/Brendan/Documents/nasa/',files[ind_tar])) # open folder just untared
+files <- list.files() # get list of files
+for(i in 1:length(files)){
+  file.rename(files[i],
+              paste(unlist(strsplit(files[i],'.nc')),
+                    'marker', # where this could be whatever sequential or predefined maker we decide
+                    'nc',
+                    sep='.'))
+}
