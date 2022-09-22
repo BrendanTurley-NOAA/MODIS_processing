@@ -10,7 +10,7 @@ library(httr)
 setwd('/Users/Brendan/Documents/nasa/cookies')
 appkey <- readLines('appkey.txt')
 
-#Set up your ~/.netrc file as listed here: https://wiki.earthdata.nasa.gov/display/EL/How+To+Access+Data+With+cURL+And+Wget
+#Set up your ~/.netrc file as listed here: https://wiki.earthdata.nasa.gov/display/EL/How+To+Access+Data+With+cURL+And+Wget or https://oceancolor.gsfc.nasa.gov/data/download_methods/#:~:text=Create%20a%20.netrc%20file.
 netrc_path <- "~/.netrc"
 cookie_path <- "~/.urs_cookies"
 
