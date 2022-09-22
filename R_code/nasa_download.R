@@ -18,6 +18,8 @@ cookie_path <- "~/.urs_cookies"
 ### A list of files could be supplied in a loop to download using options 1-3 listed below.
 setwd('/Users/Brendan/Documents/nasa/')
 modis_list <- readLines('aqua_modis_wfs_download_list.txt')
+individual_file_url <- paste0('https://oceandata.sci.gsfc.nasa.gov/ob/getfile/',
+                              modis_list[1])
 
 ### The following examples 1-3 use the url
 ### example file to download
