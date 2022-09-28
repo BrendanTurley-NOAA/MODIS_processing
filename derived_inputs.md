@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
 ### Carder bbp - 547nm wavelength, total backscatter to Morel backscatter (Carder et al. 1999; Cannizaro et al. 2008)
 
 Carder_bbp(555) = −0.00182 + 2.058 * rsr(555)
