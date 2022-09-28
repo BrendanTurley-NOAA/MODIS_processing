@@ -32,7 +32,11 @@ flags <- flags[,ncol(flags):1] # flip the matrix
 flags[which(flags==0)] <- NA
 flags[which(flags=='NaN')] <- NA
 chl_1 <- ncvar_get(reproj1, 'chlor_a')
+chl_1[which(chl_1=='NaN')] <- NA
 chl_1 <- chl_1[,ncol(chl_1):1] # flip the matrix
+abi <- ncvar_get(reproj1, 'ABI')
+abi[which(abi=='NaN')] <- NA
+abi <- abi[,ncol(abi):1] # flip the matrix
 lat <- ncvar_get(reproj1, 'lat')
 lat <- rev(lat) ### backwards for some reason, plotting hates that
 lon <- ncvar_get(reproj1, 'lon')
@@ -59,3 +63,12 @@ imagePlot(lon,
 map('usa',add=T)
 grid()
 dev.off()
+
+
+abi_m <- abi
+abi_m[which(!is.na(flags))] <- NA
+imagePlot(lon,
+          lat,
+          abi_m,
+          asp=1)
+map('usa',add=T)
