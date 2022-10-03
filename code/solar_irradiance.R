@@ -11,8 +11,8 @@ library(ncdf4)
 # *F0_nnn in our use already includes pi
 
 ### set working directory
-setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process')
-data <- nc_open('A2005217182500.L2_LAC_OC.nc')
+setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process/MODIS_test')
+data <- nc_open('AQUA_MODIS.20030108T180001.L2.OC.x.nc')
 wvlth <- substr(attributes(data$var)$names[grep('rrs',attributes(data$var)$names,ignore.case = T)],18,24)
 bands <- attributes(data$var)$names[grep('rrs',attributes(data$var)$names,ignore.case = T)]
 f0 <- rep(NA,10)
@@ -20,7 +20,7 @@ for(i in 1:10){
   tmp <- ncatt_get(data,bands[i],'solar_irradiance')
   
   print(ncatt_get(data,bands[i]))
-  f0[i] <- tmp$value
+  f0[i] <- as.double(tmp$value)
 }
 
 names(f0) <- wvlth
@@ -30,4 +30,7 @@ names(f0) <- wvlth
 # m^-2 to cm^-1 => 1/10000*m^-2
 convert <- 1000/10000
 
-f0*convert
+f0_convert <- as.data.frame(f0*convert)
+colnames(f0_convert) <- c('F0(mW.cm^-2.um^-1)')
+
+write.csv(f0_convert,'f0.csv')

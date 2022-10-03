@@ -14,7 +14,7 @@ setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process/modis_te
 graph_file <- 'test_mosaic.xml'
 par_file <-  'ReprojectEx01.par'
 files <- list.files()
-files <- files[grep('.nc',files)]
+in_file <- files[grep('.nc',files)]
 write.table(in_file,'infile.txt',quote=F,col.names = F,row.names = F)
 out_file <- 'mosaic_test2.nc'
 ### create command with appropriate files
