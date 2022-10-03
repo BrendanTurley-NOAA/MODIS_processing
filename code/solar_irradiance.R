@@ -13,6 +13,7 @@ library(ncdf4)
 ### set working directory
 setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process/MODIS_test')
 data <- nc_open('AQUA_MODIS.20030108T180001.L2.OC.x.nc')
+# ncvar_get(data,'sensor_band_parameters/F0')
 wvlth <- substr(attributes(data$var)$names[grep('rrs',attributes(data$var)$names,ignore.case = T)],18,24)
 bands <- attributes(data$var)$names[grep('rrs',attributes(data$var)$names,ignore.case = T)]
 f0 <- rep(NA,10)

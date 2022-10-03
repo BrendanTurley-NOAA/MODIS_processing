@@ -18,3 +18,10 @@ l2_flag_check <- function(l2flag, ref){
   out <- any(rowSums(cbind(test_i,ref))==2)
   return(out)
 }
+
+
+# setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process/MODIS_test')
+# data <- nc_open('AQUA_MODIS.20030108T180001.L2.OC.x.nc')
+# flag_att <- ncatt_get(data,'geophysical_data/l2_flags')
+# flag_description <- data.frame(meaning=unlist(strsplit(flag_att$flag_meanings,' ')),flags=1:32)
+# flag_description[L2GEN,]
