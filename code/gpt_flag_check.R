@@ -2,6 +2,7 @@
 ### this code assumes you have downloaded and installed SNAP
 ### https://step.esa.int/main/download/snap-download/
 
+library(fields)
 library(ncdf4)
 library(rgdal)
 
@@ -39,6 +40,16 @@ t2 <- system.time(
 )
 
 
+graph_file <- 'test_mosaic2.xml'
+par_file <-  'ReprojectEx01.par'
+out_file <- 'A2005217182500.L2_LAC_OC_reproject3.nc'
+### create command with appropriate files
+cmd <- paste0('/Applications/snap/bin/gpt ',graph_file,' -p ',par_file ," `cat infile.txt`",' -Pofile=',out_file)
+### run command
+t3 <- system.time(
+  system(cmd) # calls command in Mac Terminal
+)
+
 ### open newly created files ans plot to see results
 setwd('~/Desktop/professional/projects/Postdoc_FL/hab_index/gpt_process')
 
@@ -54,6 +65,7 @@ lat_1 <- rev(lat_1)
 lon_1 <- ncvar_get(reproj1, 'lon')
 nc_close(reproj1)
 
+chl_1[which(flags_1==1)] <- NA
 
 reproj2 <- nc_open('A2005217182500.L2_LAC_OC_reproject2.nc')
 attributes(reproj2$var)
@@ -67,6 +79,50 @@ lat_2 <- rev(lat_2)
 lon_2 <- ncvar_get(reproj2, 'lon')
 nc_close(reproj2)
 
+flags_v <- as.vector(flags_2)
+# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
+flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
+flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags_2),ncol(flags_2))
+flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags_2))
+flags_1.2[which(flags_1.2==F)] <- NA
+flags_1.2[which(flags_1.2==T)] <- 1
 
+chl_2[flags_1.3] <- NA
+
+
+reproj3 <- nc_open('A2005217182500.L2_LAC_OC_reproject3.nc')
+attributes(reproj3$var)
+chl_3 <- ncvar_get(reproj3, 'chlor_a')
+chl_3 <- chl_3[,ncol(chl_3):1]
+chl_3[which(chl_3==0)] <- NA
+chl_3 <- log10(chl_3)
+flags_3 <- ncvar_get(reproj3, 'l2_masks')
+flags_3 <- flags_3[,ncol(flags_3):1]
+flags_4 <- ncvar_get(reproj3, 'l2_flags')
+flags_4 <- flags_4[,ncol(flags_4):1]
+lat_3 <- ncvar_get(reproj3, 'lat')
+lat_3 <- rev(lat_3)
+lon_3 <- ncvar_get(reproj3, 'lon')
+nc_close(reproj3)
+
+flags_v <- as.vector(flags_4)
+# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
+flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
+flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags_4),ncol(flags_4))
+flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags_4))
+flags_1.2[which(flags_1.2==F)] <- NA
+flags_1.2[which(flags_1.2==T)] <- 1
+
+chl_m <- chl_3
+chl_m[flags_1.3] <- NA
+
+chl_3[which(flags_3==1)] <- NA
+
+
+identical(chl_1,chl_2)
+
+par(mfrow=c(2,2))
 imagePlot(lon_1,lat_1,chl_1,asp=1)
 imagePlot(lon_2,lat_2,chl_2,asp=1)
+imagePlot(lon_3,lat_3,chl_3,asp=1)
+imagePlot(lon_3,lat_3,chl_m,asp=1)
