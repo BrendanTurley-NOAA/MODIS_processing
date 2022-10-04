@@ -120,6 +120,13 @@ chl_3[which(flags_3==1)] <- NA
 
 
 identical(chl_1,chl_2)
+identical(chl_3,chl_m)
+
+sapply(list(chl_1,chl_2,chl_3,chl_m),mean,na.rm=T)
+sapply(list(chl_1,chl_2,chl_3,chl_m),sd,na.rm=T)
+sapply(list(chl_1,chl_2,chl_3,chl_m),quantile,na.rm=T)
+sapply(list(chl_1,chl_2,chl_3,chl_m),function(x) length(!is.na(x)))
+
 
 par(mfrow=c(2,2))
 imagePlot(lon_1,lat_1,chl_1,asp=1)
