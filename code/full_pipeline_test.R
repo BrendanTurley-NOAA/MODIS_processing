@@ -6,6 +6,8 @@ library(maps)
 library(ncdf4)
 
 
+source('~/Documents/R/Github/MODIS_processing/code/l2_flag_check.R')
+
 ### ----------- Download ----------- 
 
 ### need unique appkey; keep this a secret!
@@ -89,17 +91,18 @@ cat('total time:',sum(times2), 'sec')
 setwd('/Users/Brendan/Documents/nasa/download_test/out')
 data <- nc_open('c01.AQUA_MODIS.20050801.OC.WFS.nc')
 chl <- ncvar_get(data,'chlor_a')
-chl2 <- ncvar_get(data,'chlor_a')
+chl2 <- chl1 <- chl
 mask <- ncvar_get(data,'l2_masks')
 flags <- ncvar_get(data,'l2_flags')
 
-
-chl[which(mask>0)] <- NA
+chl[which(chl==0)] <- NA
 image(log(chl),asp=1)
+
+chl1[which(mask>0)] <- NA
+image(log(chl1),asp=1)
 
 
 flags_v <- as.vector(flags)
-# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
 flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
 flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags),ncol(flags))
 flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags))
@@ -108,3 +111,26 @@ flags_1.2[which(flags_1.2==T)] <- 1
 
 chl2[flags_1.3] <- NA
 image(log(chl2),asp=1)
+
+chlm[flags_1.2] <- NA
+image(log(chlm),asp=1)
+
+sapply(list(chl,chl2),mean,na.rm=T)
+sapply(list(chl,chl2),sd,na.rm=T)
+sapply(list(chl,chl2),quantile,na.rm=T)
+sapply(list(chl,chl2),function(x) length(!is.na(x)))
+
+chl1[!is.na(chl1)] <- 1
+chl1[is.na(chl1)] <- 0
+chl2[!is.na(chl2)] <- 3
+chl2[is.na(chl2)] <- 0
+
+image(chl1-chl2,asp=1,col=c(1,2,4),breaks=c(-3,-2.5,-1,1))
+
+which((chl1-chl2)==-3)
+
+odd_flags <- sort(unique(flags[which((chl1-chl2)==-3)]))
+
+sapply(odd_flags,l2_flag_check,ref)
+
+lapply(odd_flags,function(x) which(intToBits(x)>0))
