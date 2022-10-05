@@ -80,12 +80,8 @@ lon_2 <- ncvar_get(reproj2, 'lon')
 nc_close(reproj2)
 
 flags_v <- as.vector(flags_2)
-# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
 flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
-flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags_2),ncol(flags_2))
 flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags_2))
-flags_1.2[which(flags_1.2==F)] <- NA
-flags_1.2[which(flags_1.2==T)] <- 1
 
 chl_2[flags_1.3] <- NA
 
@@ -106,12 +102,8 @@ lon_3 <- ncvar_get(reproj3, 'lon')
 nc_close(reproj3)
 
 flags_v <- as.vector(flags_4)
-# res2 <- system.time(lapply(flags_v,l2_flag_check,ref))
-flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
-flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags_4),ncol(flags_4))
-flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags_4))
-flags_1.2[which(flags_1.2==F)] <- NA
-flags_1.2[which(flags_1.2==T)] <- 1
+flags_1.1 <- sapply(flags_v,l2_flag_check,ref)
+flags_1.3 <- structure(flags_1.1, dim=dim(flags_4))
 
 chl_m <- chl_3
 chl_m[flags_1.3] <- NA
@@ -133,3 +125,23 @@ imagePlot(lon_1,lat_1,chl_1,asp=1)
 imagePlot(lon_2,lat_2,chl_2,asp=1)
 imagePlot(lon_3,lat_3,chl_3,asp=1)
 imagePlot(lon_3,lat_3,chl_m,asp=1)
+
+
+chl_3[!is.na(chl_3)] <- 1
+chl_3[is.na(chl_3)] <- 0
+chl_m[!is.na(chl_m)] <- 3
+chl_m[is.na(chl_m)] <- 0
+
+image(chl_3-chl_m,asp=1,col=c(1,2,4),breaks=c(-3,-2.5,-1,1))
+
+ind <- which((chl_3-chl_m)==-3)
+
+flags_3[ind]
+
+odd_flags <- sort(unique(flags_4[ind]))
+
+sapply(odd_flags,l2_flag_check,ref)
+
+lapply(odd_flags,function(x) which(intToBits(x)>0))
+
+cbind(intToBits(odd_flags[1]),ref)
