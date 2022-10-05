@@ -106,8 +106,8 @@ flags_v <- as.vector(flags)
 flags_1.1 <- lapply(flags_v,l2_flag_check,ref)
 flags_1.2 <- matrix(unlist(flags_1.1),nrow(flags),ncol(flags))
 flags_1.3 <- structure(unlist(flags_1.1), dim=dim(flags))
-flags_1.2[which(flags_1.2==F)] <- NA
-flags_1.2[which(flags_1.2==T)] <- 1
+# flags_1.2[which(flags_1.2==F)] <- NA
+# flags_1.2[which(flags_1.2==T)] <- 1
 
 chl2[flags_1.3] <- NA
 image(log(chl2),asp=1)
@@ -134,3 +134,5 @@ odd_flags <- sort(unique(flags[which((chl1-chl2)==-3)]))
 sapply(odd_flags,l2_flag_check,ref)
 
 lapply(odd_flags,function(x) which(intToBits(x)>0))
+
+cbind(intToBits(odd_flags[1]),ref)
