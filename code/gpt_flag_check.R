@@ -142,6 +142,62 @@ odd_flags <- sort(unique(flags_4[ind]))
 
 sapply(odd_flags,l2_flag_check,ref)
 
-lapply(odd_flags,function(x) which(intToBits(x)>0))
+lapply(odd_flags,function(x) which(intToBits(x)>0)-1)
 
 cbind(intToBits(odd_flags[1]),ref)
+
+
+### -------------- double check -------------- 
+graph_file <- 'test_mosaic4.xml'
+par_file <-  'ReprojectEx01.par'
+out_file <- 'A2005217182500.L2_LAC_OC_reproject4.nc'
+### create command with appropriate files
+cmd <- paste0('/Applications/snap/bin/gpt ',graph_file,' -p ',par_file ," `cat infile.txt`",' -Pofile=',out_file)
+### run command
+t3 <- system.time(
+  system(cmd) # calls command in Mac Terminal
+)
+
+data <- nc_open('A2005217182500.L2_LAC_OC_reproject4.nc')
+vars <- unlist(attributes(data$var))
+flag_chk <- matrix(0,777,777)
+for(i in 3:19){
+  tmp <- ncvar_get(data, vars[i])
+  assign(vars[i],tmp)
+  flag_chk <- flag_chk + tmp
+}
+flag_chk[which(flag_chk>0)] <- 1
+flag_chk <- flag_chk[,ncol(flag_chk):1]
+
+chl_3 <- ncvar_get(data, 'chlor_a')
+chl_3 <- chl_3[,ncol(chl_3):1]
+chl_3[which(chl_3==0)] <- NA
+chl_3 <- log10(chl_3)
+flags_3 <- ncvar_get(data, 'l2_masks')
+flags_3 <- flags_3[,ncol(flags_3):1]
+flags_4 <- ncvar_get(data, 'l2_flags')
+flags_4 <- flags_4[,ncol(flags_4):1]
+lat_3 <- ncvar_get(data, 'lat')
+lat_3 <- rev(lat_3)
+lon_3 <- ncvar_get(data, 'lon')
+
+nc_close(data)
+
+par(mfrow=c(1,2))
+imagePlot(flag_chk,asp=1)
+imagePlot(flags_3,asp=1)
+
+identical(flag_chk,flags_3)
+
+flags_v <- as.vector(flags_4)
+flags_1.1 <- sapply(flags_v,l2_flag_check,ref)
+flags_1.3 <- structure(flags_1.1, dim=dim(flags_4))
+
+chl_m <- chl_3
+chl_m[flags_1.3] <- NA
+
+chl_3[which(flags_3==1)] <- NA
+
+par(mfrow=c(1,2))
+imagePlot((chl_3),asp=1)
+imagePlot((chl_m),asp=1)

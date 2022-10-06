@@ -62,6 +62,7 @@ setwd('/Users/Brendan/Documents/nasa/download_test/')
 ### https://seadas.gsfc.nasa.gov/help-8.1.0/GptCookbook/gptCookbook.html
 graph_file <- 'test_mosaic2.xml'
 par_file <-  'ReprojectEx01.par'
+core <- 'c01.'
 
 files <- list.files()
 files <- files[grep('.nc',files)]
@@ -89,48 +90,34 @@ cat('total time:',sum(times2), 'sec')
 
 
 setwd('/Users/Brendan/Documents/nasa/download_test/out')
-data <- nc_open('c01.AQUA_MODIS.20050801.OC.WFS.nc')
-chl <- ncvar_get(data,'chlor_a')
-chl2 <- chl1 <- chl
-mask <- ncvar_get(data,'l2_masks')
-flags <- ncvar_get(data,'l2_flags')
+files <- list.files()
 
-chl[which(chl==0)] <- NA
-image(log(chl),asp=1)
+a_chl <- array(NA,c(8,777,777))
+par(mfrow=c(2,2))
+for(i in 1:length(files)){
+  data <- nc_open(files[i])
+  chl <- ncvar_get(data,'chlor_a')
+  chl <- chl[,ncol(chl):1]
+  mask <- ncvar_get(data,'l2_masks')
+  mask <- mask[,ncol(mask):1]
+  lon <- ncvar_get(data,'lon')
+  lat <- ncvar_get(data,'lat')
+  lat <- rev(lat)
+  
+  chl[which(chl==0)] <- NA
+  chl <- log10(chl)
+  # image(log(chl),asp=1)
+  
+  chl[which(mask>0)] <- NA
+  imagePlot(lon,lat,chl,asp=1)
+  map('world',add=T)
+  mtext(files[i])
+  
+  a_chl[i,,] <- chl
+}
 
-chl1[which(mask>0)] <- NA
-image(log(chl1),asp=1)
-
-
-flags_v <- as.vector(flags)
-flags_1.1 <- sapply(flags_v,l2_flag_check,ref)
-flags_1.2 <- matrix(flags_1.1,nrow(flags),ncol(flags))
-flags_1.3 <- structure(flags_1.1, dim=dim(flags))
-
-chl2[flags_1.3] <- NA
-image(log(chl2),asp=1)
-
-chlm[flags_1.2] <- NA
-image(log(chlm),asp=1)
-
-sapply(list(chl,chl2),mean,na.rm=T)
-sapply(list(chl,chl2),sd,na.rm=T)
-sapply(list(chl,chl2),quantile,na.rm=T)
-sapply(list(chl,chl2),function(x) length(!is.na(x)))
-
-chl1[!is.na(chl1)] <- 1
-chl1[is.na(chl1)] <- 0
-chl2[!is.na(chl2)] <- 3
-chl2[is.na(chl2)] <- 0
-
-image(chl1-chl2,asp=1,col=c(1,2,4),breaks=c(-3,-2.5,-1,1))
-
-which((chl1-chl2)==-3)
-
-odd_flags <- sort(unique(flags[which((chl1-chl2)==-3)]))
-
-sapply(odd_flags,l2_flag_check,ref)
-
-lapply(odd_flags,function(x) which(intToBits(x)>0))
-
-cbind(intToBits(odd_flags[1]),ref)
+png('test.png',width=6,height=6,res=300,units='in')
+par(mfrow=c(1,1))
+imagePlot(lon,lat,apply(a_chl,c(2,3),mean,na.rm=T),asp=1)
+map('world',add=T)
+dev.off()
