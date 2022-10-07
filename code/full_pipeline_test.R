@@ -116,8 +116,41 @@ for(i in 1:length(files)){
   a_chl[i,,] <- chl
 }
 
-png('test.png',width=6,height=6,res=300,units='in')
-par(mfrow=c(1,1))
-imagePlot(lon,lat,apply(a_chl,c(2,3),mean,na.rm=T),asp=1)
-map('world',add=T)
+chl_8d_m <- apply(a_chl,c(2,3),mean,na.rm=T)
+chl_8d_sd <- apply(a_chl,c(2,3),sd,na.rm=T)
+chl_8d_n <- apply(a_chl,c(2,3),function(x) length(which(!is.na(x))))
+chl_8d_se <- chl_8d_sd/chl_8d_n
+
+png('test.png',width=10,height=10,res=300,units='in')
+par(mfrow=c(2,2),mar=c(5,4,2,4))
+imagePlot(lon,lat,chl_8d_m,asp=1,
+          breaks=pretty(chl_8d_m,n=30),
+          col = viridis(length(pretty(chl_8d_m,n=30))-1))
+map('world',add=T,fill=T,col='gray80')
+mtext('Log10 Chl 8-day mean')
+imagePlot(lon,lat,chl_8d_n,asp=1,
+          breaks=c(pretty(chl_8d_n)-.5,pretty(chl_8d_n)[length(pretty(chl_8d_n))]+.5),
+          col = inferno(length(pretty(chl_8d_n))))
+map('world',add=T,fill=T,col='gray80')
+mtext('Number of samples per pixel')
+imagePlot(lon,lat,chl_8d_se,asp=1,
+          breaks=pretty(chl_8d_se,n=10),
+          col = plasma(length(pretty(chl_8d_se,n=10))-1))
+map('world',add=T,fill=T,col='gray80')
+mtext('Standard error')
 dev.off()
+
+imagePlot(lon,lat,chl_8d_n,asp=1)
+imagePlot(lon,lat,chl_8d_se,asp=1)
+# image(lon,lat,chl_8d_n,add=T,breaks=c(-.5,.5),col=1)
+
+imagePlot(lon,lat,chl_8d_m,asp=1)
+contour(lon,lat,chl_8d_n,levels=c(2,10),add=T)
+
+### encode which days have obs per pixel
+chl_01 <- a_chl
+chl_01[which(!is.na(chl_01))] <- 1
+chl_01[which(is.na(chl_01))] <- 0
+chl_01 <- apply(chl_01,c(2,3),function(x) paste(x,collapse=''))
+sort(table(chl_01))
+
