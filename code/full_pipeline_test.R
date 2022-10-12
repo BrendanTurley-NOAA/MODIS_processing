@@ -22,7 +22,8 @@ cookie_path <- "~/.urs_cookies"
 ### A list of files could be supplied in a loop to download using options 1-3 listed below.
 setwd('/Users/Brendan/Documents/nasa/')
 modis_list <- readLines('aqua_modis_wfs_download_list.txt')
-sel <- 2083:2096
+sel <- 2083:2096 # 8days
+# sel <- 2083:2113 # 16days
 individual_file_url <- paste0('https://oceandata.sci.gsfc.nasa.gov/ob/getfile/',
                               modis_list[sel])
 
@@ -60,7 +61,7 @@ setwd('/Users/Brendan/Documents/nasa/download_test/')
 ### set files for GPT processing
 ### Both graph and parameter files where created using the SeaDAS cookbook
 ### https://seadas.gsfc.nasa.gov/help-8.1.0/GptCookbook/gptCookbook.html
-graph_file <- 'test_mosaic2.xml'
+graph_file <- 'gom_mosaic_derived4.xml'
 par_file <-  'ReprojectEx01.par'
 core <- 'c01.'
 
