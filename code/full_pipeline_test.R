@@ -61,7 +61,7 @@ cat('total time:',sum(times1), 'sec')
 
 
 
-### ----------- Mosaic ----------- 
+### ----------- Processing ----------- 
 
 ### set working directory
 setwd('/Users/Brendan/Documents/nasa/download_test/')
@@ -96,7 +96,8 @@ for(i in 1:length(days)){
 }
 cat('total time:',sum(times2), 'sec')
 
-### results 2022/10/12 on 8 days of data
+### ----------- Results ----------- 
+### benchmark 2022/10/12 for 8 days of data
 # download speed: 352.44 Mbps (https://www.speedtest.net)
 # download time: 26.589 sec
 # download total file size: 580 MB (14 files)
@@ -157,7 +158,7 @@ b_chl_8d_sd <- apply(b_chl,c(2,3),sd,na.rm=T)
 b_chl_8d_n <- apply(b_chl,c(2,3),function(x) length(which(!is.na(x))))
 b_chl_8d_se <- b_chl_8d_sd/b_chl_8d_n
 
-png('test_a.png',width=10,height=10,res=300,units='in')
+png('test_L2GEN.png',width=10,height=10,res=300,units='in')
 par(mfrow=c(2,2),mar=c(5,4,2,4))
 imagePlot(lon,lat,a_chl_8d_m,asp=1,
           breaks=pretty(a_chl_8d_m,n=30),
@@ -176,7 +177,7 @@ map('world',add=T,fill=T,col='gray80')
 mtext('Standard error')
 dev.off()
 
-png('test_b.png',width=10,height=10,res=300,units='in')
+png('test_MLS12.png',width=10,height=10,res=300,units='in')
 par(mfrow=c(2,2),mar=c(5,4,2,4))
 imagePlot(lon,lat,b_chl_8d_m,asp=1,
           breaks=pretty(b_chl_8d_m,n=30),
@@ -198,6 +199,7 @@ dev.off()
 lm_neg <- colorRampPalette(c('dodgerblue4','deepskyblue3','lightskyblue1','gray95'))
 lm_pos <- colorRampPalette(c('gray95','rosybrown1','tomato2','red4'))
 
+### change in chlorophyll between masks
 chl_diff <- b_chl_8d_m-a_chl_8d_m
 brks <- pretty(chl_diff,n=30)
 cols <- c(lm_neg(length(which(brks<0))),
@@ -212,6 +214,30 @@ map('world',add=T)
 mtext('Log10(chl_MSL12) - log10(chl_L2GEN)')
 dev.off()
 
+### change in number of days with data
+chl_diff <- b_chl_8d_n-a_chl_8d_n
+brks <- pretty(chl_diff,n=30)
+cols <- c(lm_neg(length(which(brks<0))),
+          lm_pos(length(which(brks>0))))
+
+par(mfrow=c(1,1),mar=c(5,4,2,4))
+imagePlot(lon,lat,chl_diff,asp=1,
+          breaks=brks,
+          col = cols)
+# map('world',add=T)
+
+### change in SE
+chl_diff <- b_chl_8d_se-a_chl_8d_se
+brks <- pretty(chl_diff,n=30)
+cols <- c(lm_neg(length(which(brks<0))),
+          lm_pos(length(which(brks>0))))
+
+par(mfrow=c(1,1),mar=c(5,4,2,4))
+imagePlot(lon,lat,chl_diff,asp=1,
+          breaks=brks,
+          col = cols)
+# map('world',add=T)
+
 a <- a_chl_8d_m
 a[which(!is.na(a))] <- 1
 a[which(is.na(a))] <- 0
@@ -221,6 +247,7 @@ b[which(is.na(b))] <- 0
 c <- a+b
 
 png('test_d.png',width=12,height=10,res=300,units='in')
+par(mfrow=c(1,1),mar=c(5,4,2,4))
 imagePlot(lon,lat,c,asp=1,
           # breaks=pretty(c,n=3),
           breaks=c(pretty(c,n=3)-.5,pretty(c,n=3)[length(pretty(c,n=3))]+.5),
@@ -229,12 +256,12 @@ mtext('No data = 0, L2GEN = 1, MSL12 = 2, Both = 3')
 dev.off()
 
 
-imagePlot(lon,lat,chl_8d_n,asp=1)
-imagePlot(lon,lat,chl_8d_se,asp=1)
-# image(lon,lat,chl_8d_n,add=T,breaks=c(-.5,.5),col=1)
 
-imagePlot(lon,lat,chl_8d_m,asp=1)
-contour(lon,lat,chl_8d_n,levels=c(2,10),add=T)
+imagePlot(lon,lat,a_chl_8d_m,asp=1)
+contour(lon,lat,a_chl_8d_n,levels=c(2,10),add=T)
+
+imagePlot(lon,lat,b_chl_8d_m,asp=1)
+contour(lon,lat,b_chl_8d_n,levels=c(2,10),add=T)
 
 ### encode which days have obs per pixel
 chl_01 <- a_chl
