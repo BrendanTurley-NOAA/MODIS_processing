@@ -69,7 +69,7 @@ setwd('/Users/Brendan/Documents/nasa/download_test/')
 ### Both graph and parameter files where created using the SeaDAS cookbook
 ### https://seadas.gsfc.nasa.gov/help-8.1.0/GptCookbook/gptCookbook.html
 graph_file <- 'gom_mosaic_derived4.xml'
-par_file <-  'ReprojectEx01.par'
+par_file <-  'gom_mosaic4.par'
 core <- 'c01.'
 
 files <- list.files()
