@@ -94,14 +94,35 @@ for(i in 1:length(days)){
   )
   times2[i] <- t2[3]
 }
-cat('total time:',sum(times2), 'sec')
+
+cat('Download total time:',sum(times1), 'sec')
+cat('Processing total time:',sum(times2), 'sec')
 
 ### ----------- Results ----------- 
 ### benchmark 2022/10/12 for 8 days of data
 # download speed: 352.44 Mbps (https://www.speedtest.net)
 # download time: 26.589 sec
 # download total file size: 580 MB (14 files)
+# MacBook Pro (2015); 2.9 GHz Dual-Core Intel Core i5; 16 GB 1867 MHz DDR3
 # processing time: 215.385 sec (~3 min 35 sec)
+# output total file size: 44.9 MB
+
+### benchmark 2022/10/13 for 8 days of data
+### xml file was slightly amended which may account for increased processing time and final output size
+# download speed: 349.25 Mbps (https://www.speedtest.net)
+# download time: 25.706 sec
+# download total file size: 580 MB (14 files)
+# MacBook Pro (2015); 2.9 GHz Dual-Core Intel Core i5; 16 GB 1867 MHz DDR3
+# processing time: 243.754 sec (~4 min 4 sec)
+# output total file size: 45.1 MB
+
+### benchmark 2022/10/13 for 8 days of data
+### original xml file, additional processing in second benchmark xml is superfluous, it was removed
+# download speed: 350.80 Mbps (https://www.speedtest.net)
+# download time: 27.001 sec
+# download total file size: 580 MB (14 files)
+# MacBook Pro (2015); 2.9 GHz Dual-Core Intel Core i5; 16 GB 1867 MHz DDR3
+# processing time: 225.866 sec (~3 min 46 sec)
 # output total file size: 44.9 MB
 
 setwd('/Users/Brendan/Documents/nasa/download_test/out')
@@ -122,10 +143,15 @@ for(i in 1:length(files)){
   lat <- ncvar_get(data,'lat')
   lat <- rev(lat)
   
-  ### finding swath NAs
-  # mask4 <- matrix(0,dim(mask)[1],dim(mask)[2])
-  # mask4[which(mask==0 & is.na(chl))] <- 1
-  # imagePlot(mask4,asp=1)
+  ### finding swath
+  if(any(mask==0 & is.na(chl))){
+    swath <- matrix(0,dim(mask)[1],dim(mask)[2])
+    swath[which(mask==0 & is.na(chl))] <- 1
+    swath <- swath[,ncol(swath):1]
+    # imagePlot(lon,lat,swath,asp=1)
+    swath[which(swath==0)] <- NA
+  }
+  
   
   chl_1 <- modis_mask(chl,mask)
   chl_1 <- chl_1[,ncol(chl_1):1]
@@ -136,11 +162,17 @@ for(i in 1:length(files)){
   chl_2 <- log10(chl_2)
   
   imagePlot(lon,lat,chl_1,asp=1)
-  map('world',add=T)
+  if(any(mask==0 & is.na(chl))){
+    image(lon,lat,swath,breaks=c(0,1),col=1,add=T)
+  }
+  map('world',add=T,col='gray20')
   mtext(files[i])
   
   imagePlot(lon,lat,chl_2,asp=1)
-  map('world',add=T)
+  if(any(mask==0 & is.na(chl))){
+    image(lon,lat,swath,breaks=c(0,1),col=1,add=T)
+  }
+  map('world',add=T,col='gray20')
   mtext(files[i])
   
   a_chl[i,,] <- chl_1
