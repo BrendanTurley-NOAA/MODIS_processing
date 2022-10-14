@@ -28,9 +28,11 @@ cookie_path <- "~/.urs_cookies"
 
 ### A list of files could be supplied in a loop to download using options 1-3 listed below.
 setwd('/Users/Brendan/Documents/nasa/')
-modis_list <- readLines('aqua_modis_wfs_download_list.txt')
-sel <- 2083:2096 # 8days
+# modis_list <- readLines('aqua_modis_wfs_download_list.txt')
+# sel <- 2083:2096 # 8days
 # sel <- 2083:2113 # 16days
+modis_list <- readLines('aqua_modis_wfs_download_list2.txt')
+sel <- 2036:2050
 individual_file_url <- paste0('https://oceandata.sci.gsfc.nasa.gov/ob/getfile/',
                               modis_list[sel])
 
@@ -125,11 +127,20 @@ cat('Processing total time:',sum(times2), 'sec')
 # processing time: 225.866 sec (~3 min 46 sec)
 # output total file size: 44.9 MB
 
+### benchmark 2022/10/14 for 8 days of data
+### updated xml file (slightly smaller region of interest and update download list
+# download speed: 335.75 Mbps (https://www.speedtest.net)
+# download time: 27.238 sec
+# download total file size: 602.8 MB (15 files)
+# MacBook Pro (2015); 2.9 GHz Dual-Core Intel Core i5; 16 GB 1867 MHz DDR3
+# processing time: 246.082 sec (~4 min 6 sec)
+# output total file size: 39.2 MB
+
 setwd('/Users/Brendan/Documents/nasa/download_test/out')
 files <- list.files()
 
-a_chl <- array(NA,c(8,777,777))
-b_chl <- array(NA,c(8,777,777))
+a_chl <- array(NA,c(8,722,722))
+b_chl <- array(NA,c(8,722,722))
 pdf('test_all.pdf',width=10,height=10,useDingbats=T)
 par(mfrow=c(2,2))
 for(i in 1:length(files)){
