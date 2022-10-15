@@ -15,6 +15,29 @@ modis_mask <- function(data, mask){
 
 source('~/Documents/R/Github/MODIS_processing/code/l2_flag_check.R')
 
+### ----------- Distributed Download list ----------- 
+setwd('/Users/Brendan/Documents/nasa/')
+modis_list <- readLines('aqua_modis_wfs_download_list2.txt')
+### sorts list by days; most days have multiple files
+dates <- substr(modis_list,12,19)
+tab <- table(dates) # summarize number of files per day
+# max(tab) # I did explore assigning stratified by number of files per day; by this method seemed just as random but more efficient
+core <- 32 # number of cores used
+n <- length(tab)
+### randomly assign a number to each day
+samps <- rep(NA,n)
+for(i in 1:n){
+  samps[i] <- sample(1:core,1)
+}
+hist(samps) # visually check random distribution
+### assign selected files into download lists randomly distributed by day per core
+### each list would be distributed to a core
+for(i in 1:core){
+  dats <- names(tab[which(samps==i)])
+  names <- unlist(lapply(dats,function(x) grep(x,modis_list)))
+  assign(paste0('download',i),modis_list[names])
+}
+
 ### ----------- Download ----------- 
 
 ### need unique appkey; keep this a secret!
