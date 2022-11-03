@@ -40,14 +40,12 @@ F0 <- c(172.912,187.622,205.878,194.933,185.747,186.539,186.539,183.869,157.811,
 
 ### reference date and julian days
 yr <- 2021
-last <- ifelse(leap_year(paste0(yr,'-01-01')),366,365)
-
 dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
                     yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
 parms <- c('CHL_chlor_a','FLH_nflh','RRS_Rrs_443','RRS_Rrs_488','RRS_Rrs_531','RRS_Rrs_547','RRS_Rrs_555','RRS_Rrs_667','RRS_Rrs_678')
 parm <- substr(parms,5,11)
 
-url <- 'http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA/L3SMI/2011/002/A2011002.L3m_DAY_CHL_chl_ocx_4km.nc'
+url <- 'http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA/L3SMI/2011/002/A2011002.L3m_DAY_FLH_nflh_4km.nc'
 modis <- nc_open(url)
 lon <- ncvar_get(modis, 'lon')
 lon_start <- which(lon>lonbox_w)[1]-1
@@ -83,6 +81,18 @@ t1 <- system.time(
     }
   }
 )
+### create netcdf file
+dimlon <- ncdim_def('Lon','degreesE',lon2)
+dimlat <- ncdim_def('Lat','degreesN',lat2)
+dates1 <- as.POSIXct(paste0(dates$date,00:00),tz='GMT')
+dates2 <- as.numeric(dates1)/86400
+# as.Date(dates2[1],origin='1970-01-01')
+dimtime <- ncdim_def('Time','days since 1970-01-01',dates2)
+chl_a <- ncvar_def('chl_a','mg m^-3',list(dimlat,dimlon,dimtime),-1,"Chlorophyll Concentration, OCI Algorithm",prec='double',compression=5) # prec='float may be smaller'
+chl_a <- ncvar_def('nflh','mg m^-3',list(dimlat,dimlon,dimtime),-1,"Chlorophyll Concentration, OCI Algorithm",prec='double',compression=5) # prec='float may be smaller'
+
+assign(paste0(yr),data_yday)
+rm(data_yday)
 
 par(mfrow=c(2,2))
 for(i in 1:9){
@@ -97,6 +107,7 @@ data_yday <- array(1000000,c(1,9,length(lon2),length(lat2)))
 size <- object.size(data_yday)
  # 1 day ~ 1.8 mb; 
 format(size*365*22,units='GB')
+format(size*365,units='GB')
 
 
 # d) what derived parameters post-processing
