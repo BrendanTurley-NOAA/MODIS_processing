@@ -30,6 +30,14 @@ erddap_extract <- function(data, info, parameter){
   # return(list(new_data,lon,lat))
 }
 
+vec_brk <- function(input) {
+  core <- (diff(input)/2) + input[1:(length(input)-1)]
+  beg <- input[1] - (diff(input[1:2])/2)
+  last <- input[length(input)] + (diff(input[(length(input)-1):(length(input))])/2)
+  output <- c(beg,core,last)
+  output
+}
+
 ### 1) download daily 4km Aqua data
 # a) what bounding box
 # (-87.5 30.7, -81, 24.2)
@@ -202,6 +210,7 @@ for(i in 1:length(lon2)){
 ### 3) match up to SST and bathymetry
 # mur_sst_a <- info('jplMURSST41anommday')
 mur_sst <- info('jplMURSST41')
+oisst <- info('ncdcOisst21Agg')
 
 ### West Florida Shelf
 lonbox_w <- -87.5 ### mouth of Mississippi River
@@ -212,11 +221,24 @@ latitude = c(latbox_s, latbox_n)
 longitude = c(lonbox_w, lonbox_e)
 
 time = c(paste(2021,"-01-01",sep=''), paste(2021,"-12-31",sep=''))
+time = c(paste(2021,"-01-01",sep=''), paste(2021,"-01-01",sep=''))
 t2 <- system.time(
   sst_grab <- griddap(mur_sst, latitude=latitude, longitude=longitude, time=time, fields='analysed_sst')
+  # sst_grab <- griddap(oisst, latitude=latitude, longitude=longitude+360, time=time, fields='sst')
 )
 t2
 sst_1 <- erddap_extract(sst_grab,mur_sst,'analysed_sst')
+# sst_1 <- erddap_extract(sst_grab,oisst,'sst')
+
+lon_c <- cut(sst_grab$data$lon,vec_brk(lon2))
+lat_c <- cut(sst_grab$data$lat,vec_brk(lat2))
+lonlat <- expand.grid(lon=levels(lon_c),lat=levels(lat_c))
+sst_agg <- aggregate(as.vector(sst_grab$data$analysed_sst),by=list(lon=lon_c,lat=lat_c),mean,na.rm=T)
+sst_agg <- merge(lonlat,sst_agg,by=c('lon','lat'),all=T)
+sst_agg_m <- t(matrix(sst_agg$x,length(levels(lat_c)),length(levels(lon_c))))
+
+imagePlot(sst_agg_m,asp=1)
+imagePlot(sst_1$data[,,1],asp=1)
 
 
 ### 4) variable selection
