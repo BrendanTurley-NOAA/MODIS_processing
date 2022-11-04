@@ -49,7 +49,8 @@ parm <- substr(parms,5,11)
 
 url <- 'http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA/L3SMI/2011/002/A2011002.L3m_DAY_RRS_Rrs_443_4km.nc'
 modis1 <- nc_open(url)
-ncatt_get(modis1,0)
+atts <- ncatt_get(modis1,0)
+# names(atts)[-c(1,6,8,9,11:14,18:26,29:34,36:44,46:48,51,53,55,57:64)]
 lon <- ncvar_get(modis1, 'lon')
 lon_start <- which(lon>lonbox_w)[1]-1
 lon_stop <- which(lon>lonbox_e)[1]
@@ -61,11 +62,34 @@ lat_count <- length(lat_start:lat_stop)
 lon2 <- ncvar_get(modis1, 'lon',start=lon_start,count=lon_count)
 lat2 <- ncvar_get(modis1, 'lat',start=lat_start,count=lat_count)
 
+### create netcdf file
+dimlon <- ncdim_def('Lon','degreesE',lon2)
+dimlat <- ncdim_def('Lat','degreesN',lat2)
+dates1 <- as.POSIXct(paste0(dates$date,00:00),tz='GMT')
+dates2 <- as.numeric(dates1)/86400
+# as.Date(dates2[1],origin='1970-01-01')
+dimtime <- ncdim_def('Time','days since 1970-01-01',dates2)
+chlor_a <- ncvar_def('chlor_a','mg m^-3',list(dimlon,dimlat,dimtime),-32767,"Chlorophyll Concentration, OCI Algorithm",prec='double',compression=5) # prec='float may be smaller'
+nflh <- ncvar_def('nflh','W m^-2 um^-1 sr^-1',list(dimlon,dimlat,dimtime),-32767,"Normalized Fluorescence Line Height",prec='double',compression=5) # prec='float may be smaller'
+rrs_443 <- ncvar_def('Rrs_443','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 443 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_488 <- ncvar_def('Rrs_488','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 488 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_531 <- ncvar_def('Rrs_531','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 531 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_547 <- ncvar_def('Rrs_547','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 547 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_555 <- ncvar_def('Rrs_555','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 555 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_667 <- ncvar_def('Rrs_667','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 667 nm",prec='double',compression=5) # prec='float may be smaller'
+rrs_678 <- ncvar_def('Rrs_678','sr^-1',list(dimlon,dimlat,dimtime),-32767,"Remote sensing reflectance at 678 nm",prec='double',compression=5) # prec='float may be smaller'
+# modis_tmp <- nc_create('modis_tmp.nc',list(chlor_a,nflh,rrs_443,rrs_488,rrs_531,rrs_547,rrs_555,rrs_667,rrs_678))
+modis_tmp <- nc_create(paste0('modisa_daily_',yr,'.nc'),list(chlor_a,nflh,rrs_443,rrs_488,rrs_531,rrs_547,rrs_555,rrs_667,rrs_678))
+nc.copy.atts(modis1,0,modis_tmp,0,names(atts)[c(1,6,8,9,11:14,18:26,29:34,36:44,46:48,51,53,55,57:64)]) # not tested
+ncatt_put(modis_tmp,0,"time_coverage_start",paste(dates1[1]))
+ncatt_put(modis_tmp,0,"time_coverage_end",paste(dates1[length(dates1)]))
+ncatt_put(modis_tmp,0,"modified_by",'Brendan Turley')
+
 data_yday <- array(NA,c(9,
                         length(lon2),
                         length(lat2),
                         nrow(dates)))
-# data_yday <- array(NA,c(9,length(lon2),length(lat2),1))
+pb <- txtProgressBar(min = 0, max = nrow(dates), style = 3)
 t1 <- system.time(
   for(i in 1:nrow(dates)){
     for(j in 1:length(parms)){
@@ -80,61 +104,38 @@ t1 <- system.time(
                     parms[j],
                     '_4km.nc')
       modis <- nc_open(url)
-      data <- ncvar_get(modis, parm[j],start=c(lon_start,lat_start),count=c(lon_count,lat_count))
+      data <- ncvar_get(modis,parm[j],start=c(lon_start,lat_start),count=c(lon_count,lat_count))
+      if(i==1){
+        nc.copy.atts(modis,parm[j],modis_tmp,parm[j],c('name','units','dim','_FillValue','longname','prec')) # not tested
+      }
       nc_close(modis)
-      
       data_yday[j,,,i] <- data
+      rm(modis,data,url)
     }
+    setTxtProgressBar(pb, i)
   }
 )
+t1
+# "2022-11-04 11:26:35 CDT"
+# user   system  elapsed 
+# 134.101   48.079 4389.390 
 # data_yday <- array(1000000,c(9,length(lon2),length(lat2),365))
-### create netcdf file
-dimlon <- ncdim_def('Lon','degreesE',lon2)
-dimlat <- ncdim_def('Lat','degreesN',lat2)
-dates1 <- as.POSIXct(paste0(dates$date,00:00),tz='GMT')
-dates2 <- as.numeric(dates1)/86400
-# as.Date(dates2[1],origin='1970-01-01')
-dimtime <- ncdim_def('Time','days since 1970-01-01',dates2)
-chl_a <- ncvar_def('chl_a','mg m^-3',list(dimlat,dimlon,dimtime),-1,"Chlorophyll Concentration, OCI Algorithm",prec='double',compression=5) # prec='float may be smaller'
-nflh <- ncvar_def('nflh','W m^-2 um^-1 sr^-1',list(dimlat,dimlon,dimtime),-1,"Normalized Fluorescence Line Height",prec='double',compression=5) # prec='float may be smaller'
-rrs_443 <- ncvar_def('rrs_443','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 443 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_488 <- ncvar_def('rrs_488','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 488 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_531 <- ncvar_def('rrs_531','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 531 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_547 <- ncvar_def('rrs_547','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 547 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_555 <- ncvar_def('rrs_555','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 555 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_667 <- ncvar_def('rrs_667','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 667 nm",prec='double',compression=5) # prec='float may be smaller'
-rrs_678 <- ncvar_def('rrs_678','sr^-1',list(dimlat,dimlon,dimtime),-1,"Remote sensing reflectance at 678 nm",prec='double',compression=5) # prec='float may be smaller'
-test_modis <- nc_create('test_modis.nc',list(chl_a,nflh,rrs_443,rrs_488,rrs_531,rrs_547,rrs_555,rrs_667,rrs_678))
-ncvar_put(test_modis,chl_a,data_yday[1,,,])
-ncvar_put(test_modis,nflh,data_yday[2,,,])
-ncvar_put(test_modis,rrs_443,data_yday[3,,,])
-ncvar_put(test_modis,rrs_488,data_yday[4,,,])
-ncvar_put(test_modis,rrs_531,data_yday[5,,,])
-ncvar_put(test_modis,rrs_547,data_yday[6,,,])
-ncvar_put(test_modis,rrs_555,data_yday[7,,,])
-ncvar_put(test_modis,rrs_667,data_yday[8,,,])
-ncvar_put(test_modis,rrs_678,data_yday[9,,,])
-?nc.copy.atts
-# nc.copy.atts(modis1,0,test_modis,0) # not tested
-ncatt_put(events,0,"title","HMODISA Level-3 Standard Mapped Image")
-ncatt_put(events,0,"platform","Aqua")
-ncatt_put(events,0,"l2_flag_names","ATMFAIL,LAND,HILT,HISATZEN,STRAYLIGHT,CLDICE,COCCOLITH,LOWLW,CHLWARN,CHLFAIL,NAVWARN,MAXAERITER,ATMWARN,HISOLZEN,NAVFAIL,FILTER,HIGLINT")
-ncatt_put(events,0,"map_projection","Equidistant Cylindrical")
-ncatt_put(events,0,"processing_version","2018.0")
-ncatt_put(events,0,"spatialResolution","4.64 km")
-ncatt_put(events,0,"time_coverage_start",dates1[1])
-ncatt_put(events,0,"time_coverage_end",dates1[length(dates1)])
-ncatt_put(events,0,"publisher_name","http://oceandata.sci.gsfc.nasa.gov")
-ncatt_put(events,0,"publisher_url","NASA/GSFC/OBPG")
-ncatt_put(events,0,"last_Modified",Sys.time())
-ncatt_put(events,0,"modified_by",'Brendan Turley')
-nc_close(test_modis)
 
-saveRDS(data_yday,'test_modis.rds')
-data_yday <- readRDS('test_modis.rds')
+### fill netcdf file
+ncvar_put(modis_tmp,chlor_a,data_yday[1,,,])
+ncvar_put(modis_tmp,nflh,data_yday[2,,,])
+ncvar_put(modis_tmp,rrs_443,data_yday[3,,,])
+ncvar_put(modis_tmp,rrs_488,data_yday[4,,,])
+ncvar_put(modis_tmp,rrs_531,data_yday[5,,,])
+ncvar_put(modis_tmp,rrs_547,data_yday[6,,,])
+ncvar_put(modis_tmp,rrs_555,data_yday[7,,,])
+ncvar_put(modis_tmp,rrs_667,data_yday[8,,,])
+ncvar_put(modis_tmp,rrs_678,data_yday[9,,,])
+ncatt_put(modis_tmp,0,"last_Modified",paste(Sys.time()))
+nc_close(modis_tmp)
 
-assign(paste0(yr),data_yday)
-rm(data_yday)
+# saveRDS(data_yday,paste0('modisa_daily_',yr,'.rds')) # netcdf is smaller and contains metadata
+# data_yday <- readRDS('modis_tmp.rds')
 
 par(mfrow=c(2,2))
 for(i in 1:9){
