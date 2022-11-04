@@ -60,7 +60,10 @@ lat_count <- length(lat_start:lat_stop)
 lon2 <- ncvar_get(modis, 'lon',start=lon_start,count=lon_count)
 lat2 <- ncvar_get(modis, 'lat',start=lat_start,count=lat_count)
 
-data_yday <- array(NA,c(9,length(lon2),length(lat2),nrow(dates)))
+data_yday <- array(NA,c(9,
+                        length(lon2),
+                        length(lat2),
+                        nrow(dates)))
 # data_yday <- array(NA,c(9,length(lon2),length(lat2),1))
 t1 <- system.time(
   for(i in 1:nrow(dates)){
@@ -83,7 +86,7 @@ t1 <- system.time(
     }
   }
 )
-data_yday <- array(1000000,c(9,length(lon2),length(lat2),365))
+# data_yday <- array(1000000,c(9,length(lon2),length(lat2),365))
 ### create netcdf file
 dimlon <- ncdim_def('Lon','degreesE',lon2)
 dimlat <- ncdim_def('Lat','degreesN',lat2)
