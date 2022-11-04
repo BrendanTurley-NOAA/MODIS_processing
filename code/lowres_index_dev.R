@@ -75,10 +75,6 @@ latbox_s <- 24.2 ### southern edge of Key West
 sat_lll <- c(412,443,469,488,531,547,551,555,645,667,678,748,859,869,1240,1640,2130)
 F0 <- c(172.912,187.622,205.878,194.933,185.747,186.539,186.539,183.869,157.811,152.255,148.052,128.065,97.174,95.824,45.467,23.977,9.885)
 
-### reference date and julian days
-yr <- 2021
-dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
-                    yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
 parms <- c('CHL_chlor_a','FLH_nflh','RRS_Rrs_443','RRS_Rrs_488','RRS_Rrs_531','RRS_Rrs_547','RRS_Rrs_555','RRS_Rrs_667','RRS_Rrs_678')
 parm <- substr(parms,5,11)
 
@@ -97,6 +93,10 @@ lat_count <- length(lat_start:lat_stop)
 lon2 <- ncvar_get(modis1, 'lon',start=lon_start,count=lon_count)
 lat2 <- ncvar_get(modis1, 'lat',start=lat_start,count=lat_count)
 
+### reference date and julian days
+yr <- 2021 # 2003:2021
+dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
+                    yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
 ### create netcdf file
 dimlon <- ncdim_def('Lon','degreesE',lon2)
 dimlat <- ncdim_def('Lat','degreesN',lat2)
