@@ -2,6 +2,33 @@ library(fields)
 library(lubridate)
 library(ncdf4)
 library(ncdf4.helpers)
+library(rerddap)
+
+erddap_extract <- function(data, info, parameter){
+  data_temp <- data$data
+  ind_extract <- which(names(data_temp)==parameter)
+  time_step <- unique(data_temp$time)
+  lon <- data$summary$dim$longitude$vals
+  lat <- data$summary$dim$latitude$vals
+  
+  new_data <- array(data_temp[,ind_extract], 
+                    c(length(lon),
+                      length(lat),
+                      length(time_step)))
+  
+  row_ind <- which(info$alldata$NC_GLOBAL$attribute_name=='title')
+  col_ind <- which(colnames(info$alldata$NC_GLOBAL)=='value')
+  name <- info$alldata$NC_GLOBAL[row_ind,col_ind]
+  name <- unlist(strsplit(name,split=','))
+  return(list(data = new_data,
+              lon = lon,
+              lat = lat,
+              time = time_step,
+              name = name))
+  # setClass('erddap',slots=c(data='matrix',lon='array',lat='array'))
+  # return(new('erddap',data=new_data,lon=lon,lat=lat))
+  # return(list(new_data,lon,lat))
+}
 
 ### 1) download daily 4km Aqua data
 # a) what bounding box
@@ -9,7 +36,7 @@ library(ncdf4.helpers)
 lonbox_w <- -87.5 ### mouth of Mississippi River
 latbox_n <- 30.7 ### northern coast
 lonbox_e <- -81 ### Florida Bay
-latbox_s <- 24.2 ### southern edge of Ket West
+latbox_s <- 24.2 ### southern edge of Key West
 
 # b) which parameters
 # chlor_a
@@ -173,6 +200,23 @@ for(i in 1:length(lon2)){
 
 
 ### 3) match up to SST and bathymetry
+# mur_sst_a <- info('jplMURSST41anommday')
+mur_sst <- info('jplMURSST41')
+
+### West Florida Shelf
+lonbox_w <- -87.5 ### mouth of Mississippi River
+latbox_n <- 30.7 ### northern coast
+lonbox_e <- -81 ### Florida Bay
+latbox_s <- 24.2 ### southern edge of Key West
+latitude = c(latbox_s, latbox_n)
+longitude = c(lonbox_w, lonbox_e)
+
+time = c(paste(2021,"-01-01",sep=''), paste(2021,"-12-31",sep=''))
+t2 <- system.time(
+  sst_grab <- griddap(mur_sst, latitude=latitude, longitude=longitude, time=time, fields='analysed_sst')
+)
+t2
+sst_1 <- erddap_extract(sst_grab,mur_sst,'analysed_sst')
 
 
 ### 4) variable selection
@@ -181,6 +225,6 @@ for(i in 1:length(lon2)){
 ### 5) create model
 
 
-### 6) valiadate model
+### 6) validate model
 
 
