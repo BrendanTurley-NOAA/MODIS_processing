@@ -1,6 +1,7 @@
 library(fields)
 library(lubridate)
 library(ncdf4)
+library(ncdf4.helpers)
 
 ### 1) download daily 4km Aqua data
 # a) what bounding box
@@ -47,18 +48,18 @@ parms <- c('CHL_chlor_a','FLH_nflh','RRS_Rrs_443','RRS_Rrs_488','RRS_Rrs_531','R
 parm <- substr(parms,5,11)
 
 url <- 'http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA/L3SMI/2011/002/A2011002.L3m_DAY_RRS_Rrs_443_4km.nc'
-modis <- nc_open(url)
-ncatt_get(modis,0)
-lon <- ncvar_get(modis, 'lon')
+modis1 <- nc_open(url)
+ncatt_get(modis1,0)
+lon <- ncvar_get(modis1, 'lon')
 lon_start <- which(lon>lonbox_w)[1]-1
 lon_stop <- which(lon>lonbox_e)[1]
 lon_count <- length(lon_start:lon_stop)
-lat <- ncvar_get(modis, 'lat')
+lat <- ncvar_get(modis1, 'lat')
 lat_start <- which(lat<latbox_n)[1]-1
 lat_stop <- which(lat<latbox_s)[1]
 lat_count <- length(lat_start:lat_stop)
-lon2 <- ncvar_get(modis, 'lon',start=lon_start,count=lon_count)
-lat2 <- ncvar_get(modis, 'lat',start=lat_start,count=lat_count)
+lon2 <- ncvar_get(modis1, 'lon',start=lon_start,count=lon_count)
+lat2 <- ncvar_get(modis1, 'lat',start=lat_start,count=lat_count)
 
 data_yday <- array(NA,c(9,
                         length(lon2),
@@ -113,6 +114,8 @@ ncvar_put(test_modis,rrs_547,data_yday[6,,,])
 ncvar_put(test_modis,rrs_555,data_yday[7,,,])
 ncvar_put(test_modis,rrs_667,data_yday[8,,,])
 ncvar_put(test_modis,rrs_678,data_yday[9,,,])
+?nc.copy.atts
+# nc.copy.atts(modis1,0,test_modis,0) # not tested
 ncatt_put(events,0,"title","HMODISA Level-3 Standard Mapped Image")
 ncatt_put(events,0,"platform","Aqua")
 ncatt_put(events,0,"l2_flag_names","ATMFAIL,LAND,HILT,HISATZEN,STRAYLIGHT,CLDICE,COCCOLITH,LOWLW,CHLWARN,CHLFAIL,NAVWARN,MAXAERITER,ATMWARN,HISOLZEN,NAVFAIL,FILTER,HIGLINT")
