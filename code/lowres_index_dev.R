@@ -170,7 +170,7 @@ ncatt_put(modis_tmp,0,"last_Modified",paste(Sys.time()))
 nc_close(modis_tmp)
 
 # saveRDS(data_yday,paste0('modisa_daily_',yr,'.rds')) # netcdf is smaller and contains metadata
-# data_yday <- readRDS('modis_tmp.rds')
+data_yday <- readRDS('modisa_daily_2021.rds')
 
 par(mfrow=c(2,2))
 for(i in 1:9){
