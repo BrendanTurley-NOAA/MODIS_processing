@@ -79,7 +79,8 @@ parms <- c('CHL_chlor_a','FLH_nflh','RRS_Rrs_443','RRS_Rrs_488','RRS_Rrs_531','R
 parm <- substr(parms,5,11)
 
 url <- 'http://oceandata.sci.gsfc.nasa.gov/opendap/MODISA/L3SMI/2011/002/A2011002.L3m_DAY_RRS_Rrs_443_4km.nc'
-modis1 <- nc_open(url)
+# system.time(modis1 <- nc_open(url,readunlim=T,suppress_dimvals=F,return_on_error=T))
+system.time(modis1 <- nc_open(url,readunlim=F,suppress_dimvals=T,return_on_error=T))
 atts <- ncatt_get(modis1,0)
 # names(atts)[-c(1,6,8,9,11:14,18:26,29:34,36:44,46:48,51,53,55,57:64)]
 lon <- ncvar_get(modis1, 'lon')
@@ -95,6 +96,8 @@ lat2 <- ncvar_get(modis1, 'lat',start=lat_start,count=lat_count)
 
 times1 <- rep(NA,length(2003:2021))
 for(yr in 2003:2021){
+  print(paste('Processing',yr, '...',Sys.time()))
+  write(paste(Sys.time(), 'Processing',yr),'output.txt',append=T)
   ### reference date and julian days
   # yr <- 2021 # 2003:2021
   dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
@@ -140,7 +143,8 @@ for(yr in 2003:2021){
                       '.L3m_DAY_',
                       parms[j],
                       '_4km.nc')
-        modis <- try(nc_open(url))
+        # modis <- try(nc_open(url))
+        modis <- try(nc_open(url,readunlim=F,suppress_dimvals=T,return_on_error=T))
         if(class(modis)!='try-error'){
           data <- ncvar_get(modis,parm[j],start=c(lon_start,lat_start),count=c(lon_count,lat_count))
           if(i==1){
@@ -148,18 +152,19 @@ for(yr in 2003:2021){
           }
           nc_close(modis)
           data_yday[j,,,i] <- data
+        } else {
+          write(paste(Sys.time(), 'Error', url),'output.txt',append=T)
         }
         rm(modis,data,url)
       }
       setTxtProgressBar(pb, i)
     }
   )
-  print(t1)
+  write(paste(Sys.time(), 'Processed', yr, 'total time (sec):',t1[3]),'output.txt',append=T)
   times1[yr-2002] <- t1[3]
   # "2022-11-04 11:26:35 CDT"
   # user   system  elapsed 
   # 134.101   48.079 4389.390 
-  # data_yday <- array(1000000,c(9,length(lon2),length(lat2),365))
   
   ### fill netcdf file
   ncvar_put(modis_tmp,chlor_a,data_yday[1,,,])
@@ -179,11 +184,12 @@ for(yr in 2003:2021){
 }
 cat('total time:',sum(times1), 'sec')
 
+
 par(mfrow=c(2,2))
 for(i in 1:9){
   imagePlot(lon2,rev(lat2),
-        log10(data_yday[i,,(dim(data_yday)[4]:1),1]),
-        asp=1)
+            log10(data_yday[i,,(dim(data_yday)[4]:1),1]),
+            asp=1)
   mtext(parm[i])
 }
 
