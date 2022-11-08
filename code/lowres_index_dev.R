@@ -94,8 +94,8 @@ lat_count <- length(lat_start:lat_stop)
 lon2 <- ncvar_get(modis1, 'lon',start=lon_start,count=lon_count)
 lat2 <- ncvar_get(modis1, 'lat',start=lat_start,count=lat_count)
 
-times1 <- rep(NA,length(2003:2021))
-for(yr in 2003:2021){
+times1 <- rep(NA,length(2017:2020))
+for(yr in 2017:2020){ # 2022-11-08; 2003-2016,2021 completed
   print(paste('Processing',yr, '...',Sys.time()))
   write(paste(Sys.time(), 'Processing',yr),'output.txt',append=T)
   ### reference date and julian days
@@ -144,7 +144,7 @@ for(yr in 2003:2021){
                       parms[j],
                       '_4km.nc')
         # modis <- try(nc_open(url))
-        modis <- try(nc_open(url,readunlim=F,suppress_dimvals=T,return_on_error=T))
+        modis <- try(nc_open(url,readunlim=F,suppress_dimvals=T,return_on_error=F))
         if(class(modis)!='try-error'){
           data <- ncvar_get(modis,parm[j],start=c(lon_start,lat_start),count=c(lon_count,lat_count))
           # if(i==1){
@@ -182,8 +182,8 @@ for(yr in 2003:2021){
   saveRDS(data_yday,paste0('modisa_daily_',yr,'.rds')) # netcdf is smaller and contains metadata
   # data_yday <- readRDS('modisa_daily_2021.rds')
 }
-cat('total time:',sum(times1), 'sec')
-
+cat('total time:',sum(times1,na.rm=T), 'sec')
+# write(paste('2003-2016, total time:',sum(times1,na.rm=T), 'sec'),'output.txt',append=T)
 
 par(mfrow=c(2,2))
 for(i in 1:9){
