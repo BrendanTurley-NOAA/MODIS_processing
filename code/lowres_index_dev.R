@@ -4,6 +4,9 @@ library(ncdf4)
 library(ncdf4.helpers)
 library(rerddap)
 
+### empty r erddap cache
+# cache_delete_all(force = FALSE)
+
 erddap_extract <- function(data, info, parameter){
   data_temp <- data$data
   ind_extract <- which(names(data_temp)==parameter)
@@ -222,8 +225,8 @@ for(i in 1:length(lon2)){
 
 ### 3) match up to SST and bathymetry
 # mur_sst_a <- info('jplMURSST41anommday')
-mur_sst <- info('jplMURSST41')
-oisst <- info('ncdcOisst21Agg')
+# mur_sst <- info('jplMURSST41')
+# oisst <- info('ncdcOisst21Agg')
 
 ### West Florida Shelf
 lonbox_w <- -87.5 ### mouth of Mississippi River
@@ -233,25 +236,83 @@ latbox_s <- 24.2 ### southern edge of Key West
 latitude = c(latbox_s, latbox_n)
 longitude = c(lonbox_w, lonbox_e)
 
-time = c(paste(2021,"-01-01",sep=''), paste(2021,"-12-31",sep=''))
-time = c(paste(2021,"-01-01",sep=''), paste(2021,"-01-01",sep=''))
-t2 <- system.time(
-  sst_grab <- griddap(mur_sst, latitude=latitude, longitude=longitude, time=time, fields='analysed_sst')
-  # sst_grab <- griddap(oisst, latitude=latitude, longitude=longitude+360, time=time, fields='sst')
-)
-t2
-sst_1 <- erddap_extract(sst_grab,mur_sst,'analysed_sst')
-# sst_1 <- erddap_extract(sst_grab,oisst,'sst')
-
-lon_c <- cut(sst_grab$data$lon,vec_brk(lon2))
-lat_c <- cut(sst_grab$data$lat,vec_brk(lat2))
+url <- 'https://opendap.jpl.nasa.gov/opendap/OceanTemperature/ghrsst/data/GDS2/L4/GLOB/JPL/MUR/v4.1/2021/001/20210101090000-JPL-L4_GHRSST-SSTfnd-MUR-GLOB-v02.0-fv04.1.nc'
+data <- nc_open(url)
+lon <- ncvar_get(data,'lon')
+lon_ind <- which(lon>=lonbox_w & lon<=lonbox_e)
+lon_tmp <- lon[lon_ind]
+lat <- ncvar_get(data,'lat')
+lat_ind <- which(lat>=latbox_s & lat<=latbox_n)
+lat_tmp <- lat[lat_ind]
+lon_start <- lon_ind[1]
+lon_count <- length(lon_ind)
+lat_start <- lat_ind[1]
+lat_count <- length(lat_ind)
+lonlat <- expand.grid(lon=lon_tmp,lat=lat_tmp)
+lon_c <- cut(lonlat$lon,vec_brk(lon2))
+lat_c <- cut(lonlat$lat,vec_brk(lat2))
 lonlat <- expand.grid(lon=levels(lon_c),lat=levels(lat_c))
-sst_agg <- aggregate(as.vector(sst_grab$data$analysed_sst),by=list(lon=lon_c,lat=lat_c),mean,na.rm=T)
-sst_agg <- merge(lonlat,sst_agg,by=c('lon','lat'),all=T)
-sst_agg_m <- t(matrix(sst_agg$x,length(levels(lat_c)),length(levels(lon_c))))
 
+times1 <- rep(NA,length(2003:2021))
+for(yr in 2003:2021){
+  print(paste('Processing',yr, '...',Sys.time()))
+  write(paste(Sys.time(), 'Processing MUR SST',yr),'output.txt',append=T)
+  ### reference date and julian days
+  # yr <- 2021 # 2003:2021
+  dates <- data.frame(date=ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day')),
+                      yday=yday(ymd(seq(as.Date(paste0(yr,'-01-01')),as.Date(paste0(yr,'-12-31')),'day'))))
+  
+  data_yday <- array(NA,c(length(lon2),
+                          length(lat2),
+                          nrow(dates)))
+  pb <- txtProgressBar(min = 0, max = nrow(dates), style = 3)
+  t1 <- system.time(
+  for(i in 1:nrow(dates)){
+    # url <- 'https://opendap.jpl.nasa.gov/opendap/OceanTemperature/ghrsst/data/GDS2/L4/GLOB/JPL/MUR/v4.1/2021/001/20210101090000-JPL-L4_GHRSST-SSTfnd-MUR-GLOB-v02.0-fv04.1.nc'
+    url <- paste0('https://opendap.jpl.nasa.gov/opendap/OceanTemperature/ghrsst/data/GDS2/L4/GLOB/JPL/MUR/v4.1/',
+           yr,
+           '/',
+           sprintf("%03d",dates$yday[i]),
+           '/',
+           yr,
+           sprintf("%02d",month(dates$date[i])),
+           sprintf("%02d",day(dates$date[i])),
+           '090000-JPL-L4_GHRSST-SSTfnd-MUR-GLOB-v02.0-fv04.1.nc')  
+    data <- try(nc_open(url,readunlim=F,suppress_dimvals=T,return_on_error=F))
+    if(class(data)!='try-error'){
+      time <- ymd_hms(ncatt_get(data,0)$start_time)
+      # time <- ncvar_get(data,'time')
+      # as.Date(time/(3600*24),origin=as.Date(substr(ncatt_get(data,'time')$units,15,40)))
+      
+      sst <- ncvar_get(data,'analysed_sst',
+                       start=c(lon_start,lat_start,1),
+                       count=c(lon_count,lat_count,-1))-273
+      sst <- NISTkTOdegC(sst)
+      sst_agg <- aggregate(as.vector(sst),by=list(lon=lon_c,lat=lat_c),mean,na.rm=T)
+      sst_agg <- merge(lonlat,sst_agg,by=c('lon','lat'),all=T)
+      sst_agg_m <- t(matrix(sst_agg$x,length(levels(lat_c)),length(levels(lon_c))))
+      
+      nc_close(data)
+      data_yday[,,i] <- sst_agg_m
+    } else {
+      write(paste0(Sys.time(), ' Error MUR SST (i = ',i,') ', url),'output.txt',append=T)
+    }
+    rm(data,url,sst,sst_agg,sst_agg_m)
+    setTxtProgressBar(pb, i)
+  }
+  )
+  write(paste(Sys.time(), 'Processed MUR SST', yr, 'total time (sec):',t1[3]),'output.txt',append=T)
+  times1[yr-2002] <- t1[3]
+  
+  saveRDS(data_yday,paste0('mursst_daily_',yr,'.rds')) # netcdf is smaller and contains metadata
+}
+cat('total time:',sum(times1,na.rm=T), 'sec')
+
+
+
+par(mfrow=c(1,2))
 imagePlot(sst_agg_m,asp=1)
-imagePlot(sst_1$data[,,1],asp=1)
+imagePlot(sst,asp=1)
 
 
 ### 4) variable selection
