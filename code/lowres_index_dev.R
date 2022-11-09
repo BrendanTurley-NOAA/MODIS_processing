@@ -183,7 +183,7 @@ for(yr in 2017:2020){ # 2022-11-08; 2003-2016,2021 completed
   # data_yday <- readRDS('modisa_daily_2021.rds')
 }
 cat('total time:',sum(times1,na.rm=T), 'sec')
-# write(paste('2003-2016, total time:',sum(times1,na.rm=T), 'sec'),'output.txt',append=T)
+# write(paste('Total time:',sum(times1,na.rm=T), 'sec (2017-2020)'),'output.txt',append=T)
 
 par(mfrow=c(2,2))
 for(i in 1:9){
