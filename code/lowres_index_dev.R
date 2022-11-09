@@ -316,6 +316,38 @@ imagePlot(sst_agg_m,asp=1)
 imagePlot(sst,asp=1)
 
 
+### bathy,etry
+url <- 'https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO2022/60s/60s_bed_elev_netcdf/ETOPO_2022_v1_60s_N90W180_bed.nc'
+## higher resolution
+# url <- 'https://www.ngdc.noaa.gov/thredds/dodsC/global/ETOPO2022/30s/30s_bed_elev_netcdf/ETOPO_2022_v1_30s_N90W180_bed.nc''
+data <- nc_open(url)
+lon <- ncvar_get(data,'lon')
+lon_ind <- which(lon>=lonbox_w & lon<=lonbox_e)
+lon_tmp <- lon[lon_ind]
+lat <- ncvar_get(data,'lat')
+lat_ind <- which(lat>=latbox_s & lat<=latbox_n)
+lat_tmp <- lat[lat_ind]
+lon_start <- lon_ind[1]
+lon_count <- length(lon_ind)
+lat_start <- lat_ind[1]
+lat_count <- length(lat_ind)
+lonlat <- expand.grid(lon=lon_tmp,lat=lat_tmp)
+lon_c <- cut(lonlat$lon,vec_brk(lon2))
+lat_c <- cut(lonlat$lat,vec_brk(lat2))
+lonlat <- expand.grid(lon=levels(lon_c),lat=levels(lat_c))
+
+bathy <- ncvar_get(data,'z',
+                 start=c(lon_start,lat_start),
+                 count=c(lon_count,lat_count))
+bathy[which(bathy>0)] <- NA
+bathy <- (-bathy)
+imagePlot(log10(bathy),asp=1)
+
+bathy_agg <- aggregate(as.vector(bathy),by=list(lon=lon_c,lat=lat_c),mean,na.rm=T)
+bathy_agg <- merge(lonlat,bathy_agg,by=c('lon','lat'),all=T)
+bathy_agg_m <- t(matrix(bathy_agg$x,length(levels(lat_c)),length(levels(lon_c))))
+imagePlot(log10(bathy_agg_m),asp=1)
+
 ### 4) variable selection
 
 
