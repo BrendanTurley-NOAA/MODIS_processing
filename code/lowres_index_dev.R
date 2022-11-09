@@ -286,7 +286,7 @@ for(yr in 2003:2021){
       
       sst <- ncvar_get(data,'analysed_sst',
                        start=c(lon_start,lat_start,1),
-                       count=c(lon_count,lat_count,-1))-273
+                       count=c(lon_count,lat_count,-1))
       sst <- NISTkTOdegC(sst)
       sst_agg <- aggregate(as.vector(sst),by=list(lon=lon_c,lat=lat_c),mean,na.rm=T)
       sst_agg <- merge(lonlat,sst_agg,by=c('lon','lat'),all=T)
