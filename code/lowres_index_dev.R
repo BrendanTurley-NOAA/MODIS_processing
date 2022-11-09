@@ -153,7 +153,7 @@ for(yr in 2017:2020){ # 2022-11-08; 2003-2016,2021 completed
           nc_close(modis)
           data_yday[j,,,i] <- data
         } else {
-          write(paste(Sys.time(), 'Error', url),'output.txt',append=T)
+          write(paste0(Sys.time(), ' Error (i = ',i,', j = ',j,') ', url),'output.txt',append=T)
         }
         rm(modis,data,url)
       }
