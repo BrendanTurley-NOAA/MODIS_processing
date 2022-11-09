@@ -2,6 +2,7 @@ library(fields)
 library(lubridate)
 library(ncdf4)
 library(ncdf4.helpers)
+library(NISTunits)
 library(rerddap)
 
 ### empty r erddap cache
