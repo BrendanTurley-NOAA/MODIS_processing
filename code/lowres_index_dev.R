@@ -249,9 +249,9 @@ lon_start <- lon_ind[1]
 lon_count <- length(lon_ind)
 lat_start <- lat_ind[1]
 lat_count <- length(lat_ind)
-lonlat <- expand.grid(lon=lon_tmp,lat=lat_tmp)
-lon_c <- cut(lonlat$lon,vec_brk(lon2))
-lat_c <- cut(lonlat$lat,vec_brk(lat2))
+lonlat_t <- expand.grid(lon=lon_tmp,lat=lat_tmp)
+lon_c <- cut(lonlat_t$lon,vec_brk(lon2))
+lat_c <- cut(lonlat_t$lat,vec_brk(lat2))
 lonlat <- expand.grid(lon=levels(lon_c),lat=levels(lat_c))
 
 times1 <- rep(NA,length(2003:2021))
