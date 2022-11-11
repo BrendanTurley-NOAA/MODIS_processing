@@ -308,12 +308,28 @@ for(yr in 2003:2021){
   saveRDS(data_yday,paste0('mursst_daily_',yr,'.rds')) # netcdf is smaller and contains metadata
 }
 cat('total time:',sum(times1,na.rm=T), 'sec')
-
+write(paste('Total time:',sum(times1,na.rm=T), 'sec (2002-2021)'),'output.txt',append=T)
 
 
 par(mfrow=c(1,2))
 imagePlot(sst_agg_m,asp=1)
 imagePlot(sst,asp=1)
+
+imagePlot(data_yday[,,1],asp=1,col=plasma(60),nlevel=59)
+imagePlot(apply(data_yday,c(1,2),mean,na.rm=T),asp=1,col=inferno(60),nlevel=59)
+imagePlot(apply(data_yday,c(1,2),quantile,.95,na.rm=T),asp=1,col=inferno(60),nlevel=59)
+imagePlot(apply(data_yday,c(1,2),quantile,.05,na.rm=T),asp=1,col=inferno(60),nlevel=59)
+imagePlot(apply(data_yday,c(1,2),sd,na.rm=T),asp=1,col=mako(60),nlevel=59)
+
+for(i in 1:12){
+  imagePlot(apply(data_yday[,,which(month(dates$date)==i)],c(1,2),mean,na.rm=T),asp=1,col=inferno(60),nlevel=59)  
+  mtext(month.abb[i])
+}
+
+for(i in 1:12){
+  imagePlot(apply(data_yday[,,which(month(dates$date)==i)],c(1,2),sd,na.rm=T),asp=1,col=mako(60),nlevel=59)  
+  mtext(month.abb[i])
+}
 
 
 ### bathy,etry
